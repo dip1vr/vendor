@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_switch/flutter_switch.dart';
 
+import 'order.dart';
+
 class Desh extends StatefulWidget {
   const Desh({super.key});
 
@@ -400,6 +402,12 @@ class _DeshState extends State<Desh> {
               currentIndex: 0,
               onTap: (index) {
                 // Handle navigation logic here
+                if (index == 1) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => Order()),
+                  );
+                }
               },
               elevation: 0,
               showUnselectedLabels: true,
