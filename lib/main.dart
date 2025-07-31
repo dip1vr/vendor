@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:vendor/desh.dart';
+import 'package:vendor_fixed/desh.dart';
 void main() {
   runApp(MyApp());
 }
@@ -8,7 +8,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context){
     return MaterialApp(
       home: Scaffold(
-        body: desh(),
+        backgroundColor: Colors.black, // Set background color to black
+        body: Desh(),
       ),
     );
   }
