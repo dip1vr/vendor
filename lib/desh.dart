@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_switch/flutter_switch.dart';
+import 'package:vendor_fixed/menu.dart';
 
 import 'order.dart';
 
@@ -394,6 +395,11 @@ class _DeshState extends State<Desh> {
                   backgroundColor: Color(0xFFE8F5E9),
                 ),
                 BottomNavigationBarItem(
+                  icon: Icon(Icons.book, color: Colors.cyan),
+                  label: 'Menu',
+                  backgroundColor: Color(0xFFEDE7F6),
+                ),
+                BottomNavigationBarItem(
                   icon: Icon(Icons.settings, color: Colors.amber),
                   label: 'Settings',
                   backgroundColor: Color(0xFFFFF8E1),
@@ -406,6 +412,12 @@ class _DeshState extends State<Desh> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => Order()),
+                  );
+                }
+                if (index == 2) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => Menu()),
                   );
                 }
               },
