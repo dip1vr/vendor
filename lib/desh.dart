@@ -420,6 +420,12 @@ class _DeshState extends State<Desh> {
                     MaterialPageRoute(builder: (context) => Menu()),
                   );
                 }
+                if (index == 3) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => Menu()),
+                  );
+                }
               },
               elevation: 0,
               showUnselectedLabels: true,

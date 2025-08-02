@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:vendor_fixed/desh.dart'; // Correct import
+import 'package:vendor_fixed/menu.dart';
 import 'package:vendor_fixed/setting.dart'; // Correct import, removed extra semicolon
 
 class Order extends StatelessWidget {
@@ -524,10 +525,16 @@ class Order extends StatelessWidget {
                   label: 'Dashboard',
                   backgroundColor: Color(0xFFEDE7F6),
                 ),
+                
                 BottomNavigationBarItem(
                   icon: Icon(Icons.receipt_long, color: Colors.green),
                   label: 'Orders',
                   backgroundColor: Color(0xFFE8F5E9),
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.book, color: Colors.cyan),
+                  label: 'Menu',
+                  backgroundColor: Color(0xFFEDE7F6),
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.settings, color: Colors.amber),
@@ -546,9 +553,10 @@ class Order extends StatelessWidget {
                 } else if (index == 2) {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) =>  Setting()),
+                    MaterialPageRoute(builder: (context) =>  Menu()),
                   );
                 }
+
               },
               elevation: 0,
               showUnselectedLabels: true,
