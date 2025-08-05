@@ -1,27 +1,25 @@
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_switch/flutter_switch.dart';
 import 'package:vendor_fixed/menu.dart';
+import 'package:vendor_fixed/setting.dart';
 
 import 'order.dart';
 
-class Desh extends StatefulWidget {
-  const Desh({super.key});
+  final toggleProvider = StateProvider<bool>((ref)=> false);
+class Desh extends ConsumerWidget {
 
-  @override
-  State<Desh> createState() => _DeshState();
-}
 
-class _DeshState extends State<Desh> {
-  bool ison = true;
 
-  // Mock order data (replace with backend fetch)
-  final List<Map<String, String>> orders = [
+  final List<Map<String, String>> orders = const [
     {'id': '1234', 'customer': 'John Doe', 'status': 'Pending'},
     {'id': '1235', 'customer': 'Jane Smith', 'status': 'Accepted'},
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isOn = ref.watch(toggleProvider);
     return Scaffold(
       backgroundColor: const Color(0xFFF7E5EC), // Cream color
       appBar: AppBar(
@@ -34,23 +32,21 @@ class _DeshState extends State<Desh> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        centerTitle: true, // Center the title
+        centerTitle: true,
       ),
       body: Container(
         decoration: const BoxDecoration(
-          color: Color(0xFFF7E5EC), // Cream color
+          color: Color(0xFFF7E5EC),
         ),
         margin: const EdgeInsets.all(10.0),
         child: SingleChildScrollView(
           child: Column(
             children: [
-              // Welcome Text
               const Text(
                 "Welcome back to KFD Restaurant",
                 style: TextStyle(fontSize: 12.0, color: Colors.black),
               ),
               const SizedBox(height: 20.0),
-              // Restaurant Status
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -63,10 +59,10 @@ class _DeshState extends State<Desh> {
                     ),
                   ),
                   FlutterSwitch(
-                    width: 50.0, // Increased size for better usability
+                    width: 50.0,
                     height: 25.0,
                     toggleSize: 15.0,
-                    value: ison,
+                    value:isOn,
                     borderRadius: 30.0,
                     padding: 5.0,
                     activeToggleColor: Colors.white,
@@ -76,15 +72,12 @@ class _DeshState extends State<Desh> {
                     activeIcon: const Icon(Icons.check, color: Colors.green),
                     inactiveIcon: const Icon(Icons.close, color: Colors.redAccent),
                     onToggle: (val) {
-                      setState(() {
-                        ison = val;
-                      });
+                      ref.read(toggleProvider.notifier).state = val;
                     },
                   ),
                 ],
               ),
               const SizedBox(height: 20.0),
-              // Existing Cards (Orders, Revenue, etc.)
               Column(
                 children: [
                   Row(
@@ -129,7 +122,7 @@ class _DeshState extends State<Desh> {
                                     ),
                                   ],
                                 ),
-                                const Positioned(
+                                Positioned(
                                   top: 0,
                                   right: 0,
                                   child: Icon(
@@ -168,7 +161,7 @@ class _DeshState extends State<Desh> {
                                     ),
                                     SizedBox(height: 25),
                                     Text(
-                                      'Rp 9,000', // Formatted currency
+                                      'Rp 9,000',
                                       style: TextStyle(
                                         fontSize: 18.0,
                                         fontWeight: FontWeight.bold,
@@ -183,7 +176,7 @@ class _DeshState extends State<Desh> {
                                     ),
                                   ],
                                 ),
-                                const Positioned(
+                                Positioned(
                                   top: 0,
                                   right: 0,
                                   child: Icon(
@@ -242,7 +235,7 @@ class _DeshState extends State<Desh> {
                                     ),
                                   ],
                                 ),
-                                const Positioned(
+                                Positioned(
                                   top: 0,
                                   right: 0,
                                   child: Icon(
@@ -296,7 +289,7 @@ class _DeshState extends State<Desh> {
                                     ),
                                   ],
                                 ),
-                                const Positioned(
+                                Positioned(
                                   top: 0,
                                   right: 0,
                                   child: Icon(
@@ -315,7 +308,6 @@ class _DeshState extends State<Desh> {
                 ],
               ),
               const SizedBox(height: 20.0),
-              // New: Recent Orders Section
               Card(
                 elevation: 4.0,
                 child: Padding(
@@ -333,7 +325,7 @@ class _DeshState extends State<Desh> {
                       ),
                       const SizedBox(height: 10.0),
                       SizedBox(
-                        height: 150.0, // Fixed height for list
+                        height: 150.0,
                         child: ListView.builder(
                           itemCount: orders.length,
                           itemBuilder: (context, index) {
@@ -342,9 +334,7 @@ class _DeshState extends State<Desh> {
                               title: Text('Order #${orders[index]['id']}'),
                               subtitle: Text('Customer: ${orders[index]['customer']}'),
                               trailing: ElevatedButton(
-                                onPressed: () {
-                                  // Handle order action (e.g., accept)
-                                },
+                                onPressed: () {},
                                 child: Text(orders[index]['status']!),
                               ),
                             );
@@ -356,12 +346,9 @@ class _DeshState extends State<Desh> {
                 ),
               ),
               const SizedBox(height: 20.0),
-              // New: Settings Button
-              
             ],
           ),
         ),
-        
       ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
@@ -407,7 +394,6 @@ class _DeshState extends State<Desh> {
               ],
               currentIndex: 0,
               onTap: (index) {
-                // Handle navigation logic here
                 if (index == 1) {
                   Navigator.push(
                     context,
@@ -423,7 +409,7 @@ class _DeshState extends State<Desh> {
                 if (index == 3) {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => Menu()),
+                    MaterialPageRoute(builder: (context) => Setting()),
                   );
                 }
               },

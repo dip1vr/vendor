@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get_navigation/get_navigation.dart';
 import 'package:vendor_fixed/desh.dart';
-import 'package:vendor_fixed/order.dart';
 
 void main(){
-  runApp(MyApp());
+  runApp(ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget{
   @override
   Widget build(BuildContext context){
-    return MaterialApp(
+    return GetMaterialApp(
       home: Scaffold(
 
         body: Desh(),

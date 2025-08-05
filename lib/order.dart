@@ -547,7 +547,7 @@ class Order extends StatelessWidget {
                 if (index == 0) {
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => const Desh()),
+                    MaterialPageRoute(builder: (context) => Desh()),
                     (route) => false, // Clear navigation stack
                   );
                 } else if (index == 2) {
@@ -556,6 +556,13 @@ class Order extends StatelessWidget {
                     MaterialPageRoute(builder: (context) =>  Menu()),
                   );
                 }
+                else if (index == 3) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) =>  Setting()),
+                  );
+                }
+
 
               },
               elevation: 0,
