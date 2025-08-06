@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:vendor_fixed/order.dart';
-import 'package:vendor_fixed/desh.dart';
-import 'package:vendor_fixed/setting.dart';
-import 'package:get/get.dart';
-
-// Riverpod provider for switch state
-final toggleProvider = StateProvider<bool>((ref) => false);
+import 'menu_item.dart';
+import 'providers.dart';
+import 'add_menu.dart'; 
+import 'order.dart';
+import 'desh.dart';
+import 'setting.dart';
 
 class Menu extends ConsumerWidget {
+  const Menu({super.key});
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // ignore: unused_local_variable
     final isSwitched = ref.watch(toggleProvider);
+    final menuList = ref.watch(menuListProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7E5EC),
@@ -43,18 +46,10 @@ class Menu extends ConsumerWidget {
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  Get.defaultDialog(
-                    title: "Add Menu",
-                    middleText: "Do you want to add a new menu item?",
-                    textConfirm: "Yes",
-                    textCancel: "No",
-                    onConfirm: () {
-                      // Yahan apni add menu logic likho
-                      Get.back(); // Dialog band karne ke liye
-                    },
-                    onCancel: () {
-                      Get.back(); // Dialog band karne ke liye
-                    },
+                  // Navigate to AddMenu screen
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => AddMenu()),
                   );
                 },
                 style: ElevatedButton.styleFrom(
@@ -71,7 +66,6 @@ class Menu extends ConsumerWidget {
                 ),
                 child: const Text("+ Add Menu"),
               ),
-
               const SizedBox(height: 10),
               Card(
                 child: Padding(
@@ -96,6 +90,7 @@ class Menu extends ConsumerWidget {
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
+                          // You can add search logic later here
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -109,239 +104,146 @@ class Menu extends ConsumerWidget {
               ),
               const SizedBox(height: 20),
 
-              // Menu card (hardcoded once for now)
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: const [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Margereted pizza",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+              // Display dynamic menu cards 
+              ...menuList.map((item) {
+                return Card(
+                  key: ValueKey(item.name),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.name,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
-                              Text("Category: pizza"),
-                            ],
-                          ),
-                          Icon(Icons.visibility, color: Colors.green),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      const Text("Discraption", style: TextStyle(fontSize: 14)),
-                      const Text(
-                        "chizz pizza , salad, souce puch , onine, origeno",
-                        style: TextStyle(fontSize: 12),
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            "₹ 120",
-                            style: TextStyle(
-                              color: Colors.green,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                                Text("Category: ${item.category}"),
+                              ],
                             ),
-                          ),
-                          Row(
-                            children: [
-                              Text(isSwitched ? "On" : "Off"),
-                              Transform.scale(
-                                scale: 0.7,
-                                child: Switch(
-                                  value: isSwitched,
-                                  onChanged: (val) {
-                                    ref.read(toggleProvider.notifier).state =
-                                        val;
-                                  },
-                                  activeColor: Colors.white,
-                                  activeTrackColor: Colors.orangeAccent,
-                                  inactiveThumbColor: Colors.grey,
-                                  inactiveTrackColor: Colors.black26,
-                                ),
+                            const Icon(Icons.visibility, color: Colors.green),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        const Text(
+                          "Description",
+                          style: TextStyle(fontSize: 14),
+                        ),
+                        Text(
+                          item.description,
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "₹ ${item.price.toStringAsFixed(2)}",
+                              style: const TextStyle(
+                                color: Colors.green,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
                               ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          SizedBox(
-                            width: 180,
-                            height: 30,
-                            child: TextButton.icon(
-                              onPressed: () {},
-                              icon: const Icon(Icons.edit),
-                              label: const Text(
-                                "data",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.black,
+                            ),
+                            Row(
+                              children: [
+                                Text(item.isActive ? "On" : "Off"),
+                                Transform.scale(
+                                  scale: 0.7,
+                                  child: Switch(
+                                    value: item.isActive,
+                                    onChanged: (val) {
+                                      final updatedList = [...menuList];
+                                      final index = updatedList.indexOf(item);
+                                      updatedList[index] = MenuItem(
+                                        name: item.name,
+                                        category: item.category,
+                                        description: item.description,
+                                        price: item.price,
+                                        isActive: val,
+                                      );
+                                      ref
+                                              .read(menuListProvider.notifier)
+                                              .state =
+                                          updatedList;
+                                    },
+                                    activeColor: Colors.white,
+                                    activeTrackColor: Colors.orangeAccent,
+                                    inactiveThumbColor: Colors.grey,
+                                    inactiveTrackColor: Colors.black26,
+                                  ),
                                 ),
-                              ),
-                              style: TextButton.styleFrom(
-                                backgroundColor: Colors.grey[300],
-                                iconColor: Colors.black,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  side: const BorderSide(
-                                    color: Colors.grey,
-                                    width: 1.5,
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            SizedBox(
+                              width: 180,
+                              height: 30,
+                              child: TextButton.icon(
+                                onPressed: () {
+                               
+                                },
+                                icon: const Icon(Icons.edit),
+                                label: const Text(
+                                  "Edit",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                style: TextButton.styleFrom(
+                                  backgroundColor: Colors.grey[300],
+                                  iconColor: Colors.black,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    side: const BorderSide(
+                                      color: Colors.grey,
+                                      width: 1.5,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 16),
-                          TextButton.icon(
-                            onPressed: () {
-                              print('Delete pressed');
-                            },
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            label: const Text(
-                              'Delete',
-                              style: TextStyle(color: Colors.red),
-                            ),
-                            style: TextButton.styleFrom(
-                              side: const BorderSide(
-                                color: Colors.grey,
-                                width: 1.5,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: const [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Brazil burgar",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text("Category: Burgar"),
-                            ],
-                          ),
-                          Icon(Icons.visibility, color: Colors.green),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      const Text("Discraption", style: TextStyle(fontSize: 14)),
-                      const Text(
-                        "spicey , salad, souce puch , onine garlic, origeno",
-                        style: TextStyle(fontSize: 12),
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            "₹ 50",
-                            style: TextStyle(
-                              color: Colors.green,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Row(
-                            children: [
-                              Text(isSwitched ? "On" : "Off"),
-                              Transform.scale(
-                                scale: 0.7,
-                                child: Switch(
-                                  value: isSwitched,
-                                  onChanged: (val) {
-                                    ref.read(toggleProvider.notifier).state =
-                                        val;
-                                  },
-                                  activeColor: Colors.white,
-                                  activeTrackColor: Colors.orangeAccent,
-                                  inactiveThumbColor: Colors.grey,
-                                  inactiveTrackColor: Colors.black26,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          SizedBox(
-                            width: 180,
-                            height: 30,
-                            child: TextButton.icon(
-                              onPressed: () {},
-                              icon: const Icon(Icons.edit),
+                            const SizedBox(width: 16),
+                            TextButton.icon(
+                              onPressed: () {
+                                // Remove item from the list
+                                final updatedList = [...menuList];
+                                updatedList.remove(item);
+                                ref.read(menuListProvider.notifier).state =
+                                    updatedList;
+                              },
+                              icon: const Icon(Icons.delete, color: Colors.red),
                               label: const Text(
-                                "data",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.black,
-                                ),
+                                'Delete',
+                                style: TextStyle(color: Colors.red),
                               ),
                               style: TextButton.styleFrom(
-                                backgroundColor: Colors.grey[300],
-                                iconColor: Colors.black,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  side: const BorderSide(
-                                    color: Colors.grey,
-                                    width: 1.5,
-                                  ),
+                                side: const BorderSide(
+                                  color: Colors.grey,
+                                  width: 1.5,
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 16),
-                          TextButton.icon(
-                            onPressed: () {
-                              print('Delete pressed');
-                            },
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            label: const Text(
-                              'Delete',
-                              style: TextStyle(color: Colors.red),
-                            ),
-                            style: TextButton.styleFrom(
-                              side: const BorderSide(
-                                color: Colors.grey,
-                                width: 1.5,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ),
+                );
+              }),
             ],
           ),
         ),
@@ -355,7 +257,7 @@ class Menu extends ConsumerWidget {
           child: Container(
             decoration: BoxDecoration(
               color: Colors.white,
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
                   color: Colors.black12,
                   blurRadius: 12,

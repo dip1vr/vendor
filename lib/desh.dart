@@ -17,6 +17,8 @@ class Desh extends ConsumerWidget {
     {'id': '1235', 'customer': 'Jane Smith', 'status': 'Accepted'},
   ];
 
+  const Desh({super.key});
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isOn = ref.watch(toggleProvider);
