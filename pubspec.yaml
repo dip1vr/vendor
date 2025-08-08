@@ -12,6 +12,9 @@ dependencies:
   flutter_switch: ^0.3.2
   flutter_riverpod: ^2.6.1
   get: ^4.7.2
+  google_fonts: ^6.1.0
+  flutter_feather_icons: ^2.0.0+1
+  firebase_core: ^4.0.0
 
 dev_dependencies:
   flutter_test:

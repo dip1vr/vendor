@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'menu_item.dart';// <-- Add this import, create this model as explained before
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_navigation/get_navigation.dart';
+import 'package:vendor_fixed/menu.dart';
+import 'menu_item.dart'; // <-- Add this import, create this model as explained before
 import 'providers.dart';
 
 class AddMenu extends ConsumerWidget {
@@ -26,15 +29,26 @@ class AddMenu extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Center(
-                child: SafeArea(
-                  child: Text(
-                    "🍚 Create Menu Item",
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.arrow_back),
+                      onPressed: () {
+                        Get.back(); // Just go back
+                      },
                     ),
-                  ),
+                    SafeArea(
+                      
+                      child: Text(
+                        "🍚 Create Menu Item",
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               SizedBox(height: 10),
@@ -153,10 +167,7 @@ class AddMenu extends ConsumerWidget {
                 width: 500,
                 decoration: BoxDecoration(
                   color: Color(0xFFEDF3FE),
-                  border: Border.all(
-                    color: Colors.cyan,
-                    width: 1,
-                  ),
+                  border: Border.all(color: Colors.cyan, width: 1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Padding(
@@ -181,18 +192,27 @@ class AddMenu extends ConsumerWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text("Menu Price:", style: TextStyle(color: Colors.blue)),
-                          Text("₹${price.toStringAsFixed(2)}",
-                              style: TextStyle(color: Colors.blue)),
+                          Text(
+                            "Menu Price:",
+                            style: TextStyle(color: Colors.blue),
+                          ),
+                          Text(
+                            "₹${price.toStringAsFixed(2)}",
+                            style: TextStyle(color: Colors.blue),
+                          ),
                         ],
                       ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text("Platform Fee (15%):",
-                              style: TextStyle(color: Colors.blue)),
-                          Text("₹${platformFee.toStringAsFixed(2)}",
-                              style: TextStyle(color: Colors.redAccent)),
+                          Text(
+                            "Platform Fee (15%):",
+                            style: TextStyle(color: Colors.blue),
+                          ),
+                          Text(
+                            "₹${platformFee.toStringAsFixed(2)}",
+                            style: TextStyle(color: Colors.redAccent),
+                          ),
                         ],
                       ),
                       SizedBox(height: 20),
@@ -201,9 +221,14 @@ class AddMenu extends ConsumerWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text("You Earn:", style: TextStyle(color: Colors.blue)),
-                          Text("₹${earnings.toStringAsFixed(2)}",
-                              style: TextStyle(color: Color(0xFF1ABC00))),
+                          Text(
+                            "You Earn:",
+                            style: TextStyle(color: Colors.blue),
+                          ),
+                          Text(
+                            "₹${earnings.toStringAsFixed(2)}",
+                            style: TextStyle(color: Color(0xFF1ABC00)),
+                          ),
                         ],
                       ),
                       SizedBox(height: 20),
@@ -220,14 +245,17 @@ class AddMenu extends ConsumerWidget {
                   final name = nameController.text.trim();
                   final category = categoryController.text.trim();
                   final description = descriptionController.text.trim();
-                  final price = double.tryParse(priceController.text.trim()) ?? 0;
+                  final price =
+                      double.tryParse(priceController.text.trim()) ?? 0;
 
                   if (name.isEmpty ||
                       category.isEmpty ||
                       description.isEmpty ||
                       price == 0) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Please fill all fields correctly")),
+                      SnackBar(
+                        content: Text("Please fill all fields correctly"),
+                      ),
                     );
                     return;
                   }
