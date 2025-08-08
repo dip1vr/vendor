@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // ✅ Firebase Auth
+import 'package:firebase_core/firebase_core.dart';
+import 'package:vendor_fixed/desh.dart';  // ✅ Firebase Core
 
 class Signup extends StatefulWidget {
   @override
@@ -89,7 +92,6 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
     if (value == null || value.trim().isEmpty) {
       return 'Please enter your email';
     }
-    // Simple email regex pattern
     final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
     if (!emailRegex.hasMatch(value.trim())) {
       return 'Please enter a valid email';
@@ -151,7 +153,7 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
                     ],
                   ),
                   child: Form(
-                    key: _formKey,  // <-- wrap with Form
+                    key: _formKey,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -183,7 +185,6 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
                         ),
                         SizedBox(height: 24),
 
-                        // Full Name
                         TextFormField(
                           controller: nameController,
                           validator: _validateName,
@@ -197,7 +198,6 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
                         ),
                         SizedBox(height: 16),
 
-                        // Email
                         TextFormField(
                           controller: emailController,
                           keyboardType: TextInputType.emailAddress,
@@ -212,7 +212,6 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
                         ),
                         SizedBox(height: 16),
 
-                        // Password
                         TextFormField(
                           controller: passwordController,
                           obscureText: !_isPasswordVisible,
@@ -239,7 +238,6 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
                         ),
                         SizedBox(height: 16),
 
-                        // Confirm Password
                         TextFormField(
                           controller: confirmPasswordController,
                           obscureText: !_isConfirmPasswordVisible,
@@ -267,18 +265,45 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
                         ),
                         SizedBox(height: 24),
 
-                        // Sign Up Button
                         SizedBox(
                           width: double.infinity,
                           height: 50,
                           child: ElevatedButton(
-                            onPressed: () {
+                            onPressed: () async {
                               if (_formKey.currentState!.validate()) {
-                                // All validations passed
-                                // TODO: Perform signup logic here
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Signing up...')),
-                                );
+                                try {
+                                  final credential = await FirebaseAuth
+                                      .instance
+                                      .createUserWithEmailAndPassword(
+                                    email: emailController.text.trim(),
+                                    password: passwordController.text.trim(),
+                                  );
+
+                                  await credential.user?.updateDisplayName(
+                                      nameController.text.trim());
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content:
+                                            Text('Sign up successful!')),
+                                  );
+
+                                  // TODO: Navigate to home page
+                                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => Desh()));
+                                } on FirebaseAuthException catch (e) {
+                                  String message = 'Signup failed';
+                                  if (e.code == 'email-already-in-use') {
+                                    message = 'Email already in use';
+                                  } else if (e.code == 'invalid-email') {
+                                    message = 'Invalid email';
+                                  } else if (e.code == 'weak-password') {
+                                    message = 'Weak password';
+                                  }
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(message)),
+                                  );
+                                }
                               }
                             },
                             style: ElevatedButton.styleFrom(
@@ -298,7 +323,6 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
                         ),
                         SizedBox(height: 16),
 
-                        // Switch to Login
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [

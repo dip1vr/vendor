@@ -1,3 +1,4 @@
+import 'package:device_preview/device_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get_navigation/get_navigation.dart';
@@ -23,7 +24,11 @@ void main() async {
     print("❌ Firebase Initialization Failed: $e");
   }
 
-  runApp(ProviderScope(child: const MyApp()));
+  runApp(
+    DevicePreview(
+      enabled: true, // set to false before production build
+      builder: (context) => ProviderScope(child: const MyApp()),
+    ),);
 }
 
 class MyApp extends StatelessWidget {
