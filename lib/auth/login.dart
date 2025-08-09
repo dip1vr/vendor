@@ -1,27 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_feather_icons/flutter_feather_icons.dart'
-    show FeatherIcons;
+import 'package:flutter_feather_icons/flutter_feather_icons.dart';
+import 'package:get/get.dart';
 import 'dart:math';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:vendor_fixed/auth/signup.dart';
 import 'package:vendor_fixed/desh.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // ✅ Firebase Auth
 
 class LoginPage extends StatefulWidget {
   final _formKey = GlobalKey<FormState>();
   @override
-  _LoginPageState createState() =>
-      _LoginPageState();
+  _LoginPageState createState() => _LoginPageState();
 }
 
-class _LoginPageState
-    extends State<LoginPage>
+class _LoginPageState extends State<LoginPage>
     with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   late AnimationController _controller;
   late Animation<Color?> _color1;
   late Animation<Color?> _color2;
 
-  // 🟢 Add these missing variables
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool rememberMe = false;
@@ -38,7 +36,6 @@ class _LoginPageState
   @override
   void initState() {
     super.initState();
-
     _controller =
         AnimationController(vsync: this, duration: Duration(seconds: 5))
           ..addStatusListener((status) {
@@ -46,16 +43,14 @@ class _LoginPageState
               setState(() {
                 index = (index + 1) % gradientColors.length;
               });
-              _startAnimation(); // loop again
+              _startAnimation();
             }
           });
-
     _startAnimation();
   }
 
   void _startAnimation() {
     final nextIndex = (index + 1) % gradientColors.length;
-
     _color1 = ColorTween(
       begin: gradientColors[index][0],
       end: gradientColors[nextIndex][0],
@@ -64,7 +59,6 @@ class _LoginPageState
       begin: gradientColors[index][1],
       end: gradientColors[nextIndex][1],
     ).animate(_controller);
-
     _controller.forward(from: 0);
   }
 
@@ -74,6 +68,80 @@ class _LoginPageState
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loginUser() async {
+    if (_formKey.currentState!.validate()) {
+      try {
+        final credential = await FirebaseAuth.instance
+            .signInWithEmailAndPassword(
+              email: emailController.text.trim(),
+              password: passwordController.text.trim(),
+            );
+
+        // ✅ Success Snackbar
+        Get.snackbar(
+          "Login Successful",
+          "Welcome back, ${credential.user?.email ?? 'User'}!",
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          borderRadius: 8,
+          margin: const EdgeInsets.all(10),
+          duration: const Duration(seconds: 3),
+          icon: const Icon(Icons.check_circle, color: Colors.white),
+        );
+
+        // ✅ Navigate to dashboard
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => Desh()),
+        );
+      } on FirebaseAuthException catch (e) {
+        print('FirebaseAuthException code: ${e.code}');
+        print('FirebaseAuthException message: ${e.message}');
+
+        String message;
+
+        switch (e.code) {
+          case 'user-not-found':
+            message = 'User not registered. Please sign up first.';
+            break;
+          case 'wrong-password':
+            message = 'Password is incorrect.';
+            break;
+          case 'invalid-email':
+            message = 'Invalid email format.';
+            break;
+          case 'user-disabled':
+            message = 'This account has been disabled.';
+            break;
+          case 'too-many-requests':
+            message = 'Too many failed attempts. Please try again later.';
+            break;
+          case 'operation-not-allowed':
+            message = 'This sign-in method is not enabled.';
+            break;
+          case 'network-request-failed':
+            message = 'Network error. Please check your internet connection.';
+            break;
+          default:
+            message = e.message ?? 'Login failed. Please try again.';
+        }
+
+        Get.snackbar(
+          "Login Failed",
+          message,
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          borderRadius: 8,
+          margin: const EdgeInsets.all(10),
+          duration: const Duration(seconds: 4),
+          icon: const Icon(Icons.error, color: Colors.white),
+        );
+      }
+    }
   }
 
   @override
@@ -151,12 +219,10 @@ class _LoginPageState
                           decoration: InputDecoration(
                             focusedBorder: OutlineInputBorder(
                               borderSide: BorderSide(
-                                
                                 color: Colors.deepOrange,
                                 width: 2,
-                                
                               ),
-                              borderRadius: BorderRadius.circular(12)
+                              borderRadius: BorderRadius.circular(12),
                             ),
                             labelText: "Email Address",
                             prefixIcon: Icon(FeatherIcons.mail),
@@ -186,12 +252,10 @@ class _LoginPageState
                           decoration: InputDecoration(
                             focusedBorder: OutlineInputBorder(
                               borderSide: BorderSide(
-                                
                                 color: Colors.deepOrange,
                                 width: 2,
-                                
                               ),
-                              borderRadius: BorderRadius.circular(12)
+                              borderRadius: BorderRadius.circular(12),
                             ),
                             labelText: "Password",
                             prefixIcon: Icon(FeatherIcons.lock),
@@ -233,7 +297,39 @@ class _LoginPageState
                               ],
                             ),
                             TextButton(
-                              onPressed: () {},
+                              onPressed: () async {
+                                if (emailController.text.trim().isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        "Enter your email to reset password",
+                                      ),
+                                    ),
+                                  );
+                                  return;
+                                }
+                                try {
+                                  await FirebaseAuth.instance
+                                      .sendPasswordResetEmail(
+                                        email: emailController.text.trim(),
+                                      );
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        "Password reset link sent to your email",
+                                      ),
+                                    ),
+                                  );
+                                } catch (e) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        "Error sending reset email",
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
                               child: Text(
                                 "Forgot password?",
                                 style: GoogleFonts.poppins(
@@ -250,16 +346,7 @@ class _LoginPageState
                           width: double.infinity,
                           height: 50,
                           child: ElevatedButton(
-                            onPressed: () {
-                              if (_formKey.currentState!.validate()) {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>  Desh(),
-                                  ),
-                                );
-                              }
-                            },
+                            onPressed: _loginUser,
                             style: ElevatedButton.styleFrom(
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -288,11 +375,10 @@ class _LoginPageState
                             ),
                             GestureDetector(
                               onTap: () {
-                                // TODO: Navigate to SignUpScreen
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>  Signup(),
+                                    builder: (context) => Signup(),
                                   ),
                                 );
                               },
