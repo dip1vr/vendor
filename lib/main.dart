@@ -26,9 +26,10 @@ void main() async {
 
   runApp(
     DevicePreview(
-      enabled: true, // set to false before production build
+      enabled: true,
       builder: (context) => ProviderScope(child: const MyApp()),
-    ),);
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

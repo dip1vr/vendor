@@ -78,6 +78,25 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
     super.dispose();
   }
 
+  // SnackBar helper function for smooth floating snackbars like login page
+  void _showStyledSnackBar(BuildContext context, String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: GoogleFonts.poppins(color: Colors.white, fontSize: 14),
+        ),
+        backgroundColor: isError ? Colors.redAccent : Colors.green,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        margin: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        duration: Duration(seconds: 3),
+      ),
+    );
+  }
+
   String? _validateName(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'Please enter your full name';
@@ -282,14 +301,12 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
                                   await credential.user?.updateDisplayName(
                                       nameController.text.trim());
 
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                        content:
-                                            Text('Sign up successful!')),
-                                  );
+                                  _showStyledSnackBar(context, 'Sign up successful!');
 
-                                  // TODO: Navigate to home page
-                                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => Desh()));
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => Desh()),
+                                  );
                                 } on FirebaseAuthException catch (e) {
                                   String message = 'Signup failed';
                                   if (e.code == 'email-already-in-use') {
@@ -298,11 +315,14 @@ class _SignupState extends State<Signup> with SingleTickerProviderStateMixin {
                                     message = 'Invalid email';
                                   } else if (e.code == 'weak-password') {
                                     message = 'Weak password';
+                                  } else if (e.code == 'operation-not-allowed') {
+                                    message =
+                                        'Email/password accounts are not enabled';
                                   }
 
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(message)),
-                                  );
+                                  _showStyledSnackBar(context, message, isError: true);
+                                } catch (e) {
+                                  _showStyledSnackBar(context, 'Something went wrong: $e', isError: true);
                                 }
                               }
                             },

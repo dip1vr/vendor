@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_feather_icons/flutter_feather_icons.dart';
 import 'package:get/get.dart';
-import 'dart:math';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:vendor_fixed/auth/signup.dart';
 import 'package:vendor_fixed/desh.dart';
@@ -23,6 +22,7 @@ class _LoginPageState extends State<LoginPage>
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool rememberMe = false;
+  bool _obscurePassword = true; // 👈 Added for password toggle
 
   final List<List<Color>> gradientColors = [
     [Colors.deepOrange, Colors.pink],
@@ -213,6 +213,7 @@ class _LoginPageState extends State<LoginPage>
                         ),
                         const SizedBox(height: 24),
 
+                        // Email Field
                         TextFormField(
                           controller: emailController,
                           keyboardType: TextInputType.emailAddress,
@@ -246,9 +247,10 @@ class _LoginPageState extends State<LoginPage>
 
                         const SizedBox(height: 16),
 
+                        // Password Field with toggle
                         TextFormField(
                           controller: passwordController,
-                          obscureText: true,
+                          obscureText: _obscurePassword,
                           decoration: InputDecoration(
                             focusedBorder: OutlineInputBorder(
                               borderSide: BorderSide(
@@ -259,7 +261,18 @@ class _LoginPageState extends State<LoginPage>
                             ),
                             labelText: "Password",
                             prefixIcon: Icon(FeatherIcons.lock),
-                            suffixIcon: Icon(Icons.visibility_off),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
