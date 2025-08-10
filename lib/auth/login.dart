@@ -4,10 +4,11 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:vendor_fixed/auth/signup.dart';
 import 'package:vendor_fixed/desh.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // ✅ Firebase Auth
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginPage extends StatefulWidget {
-  final _formKey = GlobalKey<FormState>();
+  const LoginPage({super.key});
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }
@@ -22,7 +23,7 @@ class _LoginPageState extends State<LoginPage>
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   bool rememberMe = false;
-  bool _obscurePassword = true; // 👈 Added for password toggle
+  bool _obscureText = true; // Added for password visibility toggle
 
   final List<List<Color>> gradientColors = [
     [Colors.deepOrange, Colors.pink],
@@ -37,7 +38,7 @@ class _LoginPageState extends State<LoginPage>
   void initState() {
     super.initState();
     _controller =
-        AnimationController(vsync: this, duration: Duration(seconds: 5))
+        AnimationController(vsync: this, duration: const Duration(seconds: 5))
           ..addStatusListener((status) {
             if (status == AnimationStatus.completed) {
               setState(() {
@@ -79,7 +80,6 @@ class _LoginPageState extends State<LoginPage>
               password: passwordController.text.trim(),
             );
 
-        // ✅ Success Snackbar
         Get.snackbar(
           "Login Successful",
           "Welcome back, ${credential.user?.email ?? 'User'}!",
@@ -92,17 +92,12 @@ class _LoginPageState extends State<LoginPage>
           icon: const Icon(Icons.check_circle, color: Colors.white),
         );
 
-        // ✅ Navigate to dashboard
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => Desh()),
+          MaterialPageRoute(builder: (_) => const Desh()),
         );
       } on FirebaseAuthException catch (e) {
-        print('FirebaseAuthException code: ${e.code}');
-        print('FirebaseAuthException message: ${e.message}');
-
         String message;
-
         switch (e.code) {
           case 'user-not-found':
             message = 'User not registered. Please sign up first.';
@@ -146,6 +141,9 @@ class _LoginPageState extends State<LoginPage>
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return AnimatedBuilder(
       animation: _controller,
       builder: (_, __) {
@@ -165,248 +163,270 @@ class _LoginPageState extends State<LoginPage>
               key: _formKey,
               child: Center(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Container(
-                    padding: const EdgeInsets.all(24.0),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.6),
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 12,
-                          offset: Offset(0, 6),
-                        ),
-                      ],
+                  padding: EdgeInsets.symmetric(
+                    horizontal: screenWidth * 0.05,
+                    vertical: screenHeight * 0.02,
+                  ),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: screenWidth * 0.9,
+                      maxHeight: screenHeight * 0.9,
                     ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        CircleAvatar(
-                          radius: 32,
-                          backgroundColor: Colors.orange.shade100.withOpacity(
-                            0.5,
+                    child: Container(
+                      padding: EdgeInsets.all(screenWidth * 0.06),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.6),
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 12,
+                            offset: Offset(0, 6),
                           ),
-                          child: Icon(
-                            FeatherIcons.user,
-                            color: Colors.deepOrange.withOpacity(0.6),
-                            size: 32,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        Text(
-                          "Welcome Back",
-                          style: GoogleFonts.poppins(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          "Sign in to your restaurant dashboard",
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            color: Colors.black54,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Email Field
-                        TextFormField(
-                          controller: emailController,
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: InputDecoration(
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                color: Colors.deepOrange,
-                                width: 2,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            labelText: "Email Address",
-                            prefixIcon: Icon(FeatherIcons.mail),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircleAvatar(
+                            radius: screenWidth * 0.08,
+                            backgroundColor: Colors.orange.shade100.withOpacity(0.5),
+                            child: Icon(
+                              FeatherIcons.user,
+                              color: Colors.deepOrange.withOpacity(0.6),
+                              size: screenWidth * 0.08,
                             ),
                           ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Email is required';
-                            }
-                            final emailRegex = RegExp(
-                              r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                            );
-                            if (!emailRegex.hasMatch(value)) {
-                              return 'Enter a valid email address';
-                            }
-                            return null;
-                          },
-                        ),
+                          SizedBox(height: screenHeight * 0.02),
 
-                        const SizedBox(height: 16),
-
-                        // Password Field with toggle
-                        TextFormField(
-                          controller: passwordController,
-                          obscureText: _obscurePassword,
-                          decoration: InputDecoration(
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: BorderSide(
-                                color: Colors.deepOrange,
-                                width: 2,
-                              ),
-                              borderRadius: BorderRadius.circular(12),
+                          Text(
+                            "Welcome Back",
+                            style: GoogleFonts.poppins(
+                              fontSize: screenWidth * 0.06,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
                             ),
-                            labelText: "Password",
-                            prefixIcon: Icon(FeatherIcons.lock),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscurePassword = !_obscurePassword;
-                                });
-                              },
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+                            textAlign: TextAlign.center,
                           ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Password is required';
-                            }
-                            if (value.length < 6) {
-                              return 'Password must be at least 6 characters';
-                            }
-                            return null;
-                          },
-                        ),
+                          SizedBox(height: screenHeight * 0.01),
+                          Text(
+                            "Sign in to your restaurant dashboard",
+                            style: GoogleFonts.poppins(
+                              fontSize: screenWidth * 0.035,
+                              color: Colors.black54,
+                            ),
+                            textAlign: TextAlign.center,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 2,
+                          ),
+                          SizedBox(height: screenHeight * 0.03),
 
-                        const SizedBox(height: 12),
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Checkbox(
-                                  checkColor: Colors.white,
-                                  activeColor: Colors.deepOrange,
-                                  value: rememberMe,
-                                  onChanged: (value) {
-                                    setState(() => rememberMe = value!);
-                                  },
+                          TextFormField(
+                            controller: emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            decoration: InputDecoration(
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: const BorderSide(
+                                  color: Colors.deepOrange,
+                                  width: 2,
                                 ),
-                                Text(
-                                  "Remember me",
-                                  style: GoogleFonts.poppins(fontSize: 13),
-                                ),
-                              ],
-                            ),
-                            TextButton(
-                              onPressed: () async {
-                                if (emailController.text.trim().isEmpty) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        "Enter your email to reset password",
-                                      ),
-                                    ),
-                                  );
-                                  return;
-                                }
-                                try {
-                                  await FirebaseAuth.instance
-                                      .sendPasswordResetEmail(
-                                        email: emailController.text.trim(),
-                                      );
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        "Password reset link sent to your email",
-                                      ),
-                                    ),
-                                  );
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        "Error sending reset email",
-                                      ),
-                                    ),
-                                  );
-                                }
-                              },
-                              child: Text(
-                                "Forgot password?",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 13,
-                                  color: Colors.black,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-
-                        SizedBox(
-                          width: double.infinity,
-                          height: 50,
-                          child: ElevatedButton(
-                            onPressed: _loginUser,
-                            style: ElevatedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
-                              padding: EdgeInsets.symmetric(vertical: 14),
-                              backgroundColor: Colors.deepOrange,
-                            ),
-                            child: Text(
-                              "Sign In",
-                              style: GoogleFonts.poppins(
-                                fontSize: 18,
-                                color: Colors.white,
+                              labelText: "Email Address",
+                              prefixIcon: const Icon(FeatherIcons.mail),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
                             ),
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Email is required';
+                              }
+                              final emailRegex = RegExp(
+                                r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                              );
+                              if (!emailRegex.hasMatch(value)) {
+                                return 'Enter a valid email address';
+                              }
+                              return null;
+                            },
                           ),
-                        ),
 
-                        const SizedBox(height: 16),
+                          SizedBox(height: screenHeight * 0.02),
 
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "Don't have an account? ",
-                              style: GoogleFonts.poppins(fontSize: 13),
-                            ),
-                            GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => Signup(),
-                                  ),
-                                );
-                              },
-                              child: Text(
-                                "Sign up",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 13,
+                          TextFormField(
+                            controller: passwordController,
+                            obscureText: _obscureText, // Use state variable
+                            decoration: InputDecoration(
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: const BorderSide(
                                   color: Colors.deepOrange,
-                                  fontWeight: FontWeight.bold,
+                                  width: 2,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              labelText: "Password",
+                              prefixIcon: const Icon(FeatherIcons.lock),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscureText ? Icons.visibility_off : Icons.visibility,
+                                  color: Colors.grey,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscureText = !_obscureText; // Toggle visibility
+                                  });
+                                },
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return 'Password is required';
+                              }
+                              if (value.length < 6) {
+                                return 'Password must be at least 6 characters';
+                              }
+                              return null;
+                            },
+                          ),
+
+                          SizedBox(height: screenHeight * 0.015),
+
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Flexible(
+                                child: Row(
+                                  children: [
+                                    Checkbox(
+                                      checkColor: Colors.white,
+                                      activeColor: Colors.deepOrange,
+                                      value: rememberMe,
+                                      onChanged: (value) {
+                                        setState(() => rememberMe = value!);
+                                      },
+                                    ),
+                                    Flexible(
+                                      child: Text(
+                                        "Remember me",
+                                        style: GoogleFonts.poppins(fontSize: screenWidth * 0.035),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Flexible(
+                                child: TextButton(
+                                  onPressed: () async {
+                                    if (emailController.text.trim().isEmpty) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            "Enter your email to reset password",
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      );
+                                      return;
+                                    }
+                                    try {
+                                      await FirebaseAuth.instance
+                                          .sendPasswordResetEmail(
+                                            email: emailController.text.trim(),
+                                          );
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            "Password reset link sent to your email",
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      );
+                                    } catch (e) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            "Error sending reset email",
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  child: Text(
+                                    "Forgot password?",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: screenWidth * 0.035,
+                                      color: Colors.black,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: screenHeight * 0.025),
+
+                          SizedBox(
+                            width: double.infinity,
+                            height: screenHeight * 0.06,
+                            child: ElevatedButton(
+                              onPressed: _loginUser,
+                              style: ElevatedButton.styleFrom(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                padding: EdgeInsets.symmetric(vertical: screenHeight * 0.017),
+                                backgroundColor: Colors.deepOrange,
+                              ),
+                              child: Text(
+                                "Sign In",
+                                style: GoogleFonts.poppins(
+                                  fontSize: screenWidth * 0.045,
+                                  color: Colors.white,
                                 ),
                               ),
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+
+                          SizedBox(height: screenHeight * 0.02),
+
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                "Don't have an account? ",
+                                style: GoogleFonts.poppins(fontSize: screenWidth * 0.035),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              SizedBox(width: 5),
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>  Signup(),
+                                    ),
+                                  );
+                                },
+                                child: Text(
+                                  "Sign up",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: screenWidth * 0.035,
+                                    color: Colors.deepOrange,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

@@ -457,6 +457,7 @@ class _MenuState extends State<Menu> {
                                                                 .pop();
 
                                                             ScaffoldMessenger.of(
+                                                                    // ignore: use_build_context_synchronously
                                                                     context)
                                                                 .showSnackBar(
                                                               const SnackBar(
@@ -466,6 +467,7 @@ class _MenuState extends State<Menu> {
                                                             );
                                                           } catch (e) {
                                                             ScaffoldMessenger.of(
+                                                                    // ignore: use_build_context_synchronously
                                                                     context)
                                                                 .showSnackBar(
                                                               SnackBar(
