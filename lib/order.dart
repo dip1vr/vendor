@@ -1,563 +1,298 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:vendor_fixed/desh.dart'; // Correct import
+import 'package:vendor_fixed/desh.dart';
 import 'package:vendor_fixed/menu.dart';
-import 'package:vendor_fixed/setting.dart'; // Correct import, removed extra semicolon
+import 'package:vendor_fixed/setting.dart';
 
-class Order extends StatelessWidget {
+class Order extends StatefulWidget {
   const Order({super.key});
+
+  @override
+  State<Order> createState() => _OrderState();
+}
+
+class _OrderState extends State<Order> {
+  String? vendorId;
+  String selectedFilter = "All";
+
+  @override
+  void initState() {
+    super.initState();
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      vendorId = user.uid;
+    }
+  }
+
+  // Firestore query based on filter
+  Stream<QuerySnapshot> _getOrders() {
+    final baseQuery = FirebaseFirestore.instance
+        .collection("vendors")
+        .doc(vendorId)
+        .collection("orders");
+       
+    if (selectedFilter == "All") return baseQuery.snapshots();
+
+    return baseQuery
+        .where("status", isEqualTo: selectedFilter.toLowerCase())
+        .snapshots();
+  }
+
+  Widget _buildOrderCard(Map<String, dynamic> order) {
+    final orderId = order["orderId"] ?? "N/A";
+    final customerId = order["customerId"] ?? "Unknown";
+    final total = order["total"] ?? 0;
+    final items = (order["items"] ?? []) as List<dynamic>;
+    
+
+    final status = order["status"] ?? "pending";
+
+    // Status color and label
+    Color statusColor;
+    String statusLabel;
+    IconData statusIcon;
+
+    switch (status) {
+      case "accepted":
+        statusColor = Colors.blue;
+        statusLabel = "Accepted";
+        statusIcon = Icons.check_circle;
+        break;
+      case "completed":
+        statusColor = Colors.green;
+        statusLabel = "Completed";
+        statusIcon = Icons.done_all;
+        break;
+      case "rejected":
+        statusColor = Colors.red;
+        statusLabel = "Cancelled";
+        statusIcon = Icons.cancel;
+        break;
+      default:
+        statusColor = Colors.orange;
+        statusLabel = status.capitalize(); // helper
+        statusIcon = Icons.hourglass_empty;
+    }
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Order ID + Status
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Order ID: $orderId",
+                        style: const TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 5),
+                    Text("Customer: $customerId", style: const TextStyle(fontSize: 12)),
+                  ],
+                ),
+                Card(
+                  color: Colors.white54,
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Row(
+                      children: [
+                        Icon(statusIcon, color: statusColor, size: 12),
+                        const SizedBox(width: 5),
+                        Text(statusLabel,
+                            style: TextStyle(
+                                color: statusColor,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            // Items
+            Text("Items:", style: const TextStyle(fontSize: 14)),
+const SizedBox(height: 5),
+
+items.isNotEmpty
+    ? Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: List.generate(items.length, (index) {
+          final item = items[index] as Map<String, dynamic>;
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: Text(
+              "${item['title']} x${item['quantity']}  -  ₹${item['price']}",
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.black87,
+              ),
+            ),
+          );
+        }),
+      )
+    : const Text("No items"),
+
+const SizedBox(height: 10),
+
+            // Total
+            Text("Total Amount: ₹$total",
+                style: const TextStyle(
+                    fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green)),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF7E5EC),
-      
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(8),
-            child: Column(
-              children: [ 
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Orders",
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Column(
+            children: [
+              // Header
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Orders",
                           style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          "manage your orders here",
-                          style: TextStyle(color: Colors.black, fontSize: 14),
-                        ),
-                        SizedBox(height: 20),
-                      ],
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Row(
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.filter_list, color: Colors.black),
-                            onPressed: () {},
-                          ),
-                          const Text(
-                            "Filter",
-                            style: TextStyle(color: Colors.black, fontSize: 14),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
+                              fontSize: 24, fontWeight: FontWeight.bold)),
+                      Text("Manage your orders here",
+                          style: TextStyle(fontSize: 14)),
+                    ],
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.filter_list),
+                    onPressed: () {},
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              // Filters
+              SingleChildScrollView(
+              
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                child: Row(
                   children: [
-                    ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey[300],
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                      child: const Text(
-                        "All",
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey[300],
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                    for (var filter in ["All", "Accepted", "Completed", "Rejected"])
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              selectedFilter = filter;
+                            });
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: selectedFilter == filter
+                                ? Colors.deepPurpleAccent
+                                : Colors.grey[300],
+                            foregroundColor: selectedFilter == filter
+                                ? Colors.white
+                                : Colors.black,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20)),
+                          ),
+                          child: Text(filter,
+                              style: const TextStyle(
+                                  fontSize: 12, fontWeight: FontWeight.bold)),
                         ),
                       ),
-                      child: const Text(
-                        "Pending",
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey[300],
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                      child: const Text(
-                        "Completed",
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {},
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey[300],
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                      child: const Text(
-                        "Cancelled",
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      "Recent Orders",
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+              ),
+              const SizedBox(height: 20),
+              // Orders List
+              Expanded(
+                child: vendorId == null
+                    ? const Center(child: Text("Vendor not logged in"))
+                    : StreamBuilder<QuerySnapshot>(
+                        stream: _getOrders(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(child: CircularProgressIndicator());
+                          }
+                          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                            return const Center(child: Text("No orders found"));
+                          }
+                          final orders = snapshot.data!.docs;
+                          return ListView.builder(
+                            itemCount: orders.length,
+                            itemBuilder: (context, index) {
+                              final order =
+                                  orders[index].data() as Map<String, dynamic>;
+                              return _buildOrderCard(order);
+                            },
+                          );
+                        },
                       ),
-                    ),
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text(
-                        "View All",
-                        style: TextStyle(color: Colors.blue, fontSize: 14),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Order ID: 12345",
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                SizedBox(height: 5),
-                                Text(
-                                  "Date: 2023-10-01, 10:00 AM",
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Card(
-                              color: Colors.white54,
-                              child: Padding(
-                                padding: const EdgeInsets.all(4),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: const [
-                                    Icon(
-                                      Icons.new_label,
-                                      color: Colors.green,
-                                      size: 12,
-                                    ),
-                                    SizedBox(width: 5),
-                                    Text(
-                                      "New",
-                                      style: TextStyle(
-                                        color: Colors.green,
-                                        fontSize: 8,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 25),
-                        const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Customer Name:",
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 14,
-                              ),
-                            ),
-                            SizedBox(height: 5),
-                            Text(
-                              "John Doe",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                                fontSize: 14,
-                              ),
-                            ),
-                            SizedBox(height: 5),
-                            Text(
-                              "Contact: +1 234 567 890",
-                              style: TextStyle(
-                                color: Colors.black87,
-                                fontSize: 12,
-                              ),
-                            ),
-                            SizedBox(height: 25),
-                            Text(
-                              "Items", // Fixed typo from "item" to "Items"
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 14,
-                              ),
-                            ),
-                            SizedBox(height: 5),
-                            Text(
-                              "2 items",
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                            SizedBox(height: 5),
-                            Text(
-                              "Margarita pizza x 1, Awesome Widget x 1",
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 14,
-                              ),
-                            ),
-                            SizedBox(height: 25),
-                            Text(
-                              "Total Amount: \$29.99",
-                              style: TextStyle(
-                                color: Colors.green,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            SizedBox(height: 10),
-                            Divider(color: Colors.grey, thickness: 1),
-                            SizedBox(height: 10),
-                          ],
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            ElevatedButton.icon(
-                              onPressed: () {},
-                              icon: const Icon(
-                                Icons.check_circle_outline,
-                                size: 16,
-                              ),
-                              label: const Text(
-                                "Accept",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 12,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                              ),
-                            ),
-                            ElevatedButton.icon(
-                              onPressed: () {},
-                              icon: const Icon(Icons.cancel_outlined, size: 16),
-                              label: const Text("Reject"),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red,
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 12,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Order ID: 12346", // Changed to unique ID
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                SizedBox(height: 5),
-                                Text(
-                                  "Date: 2023-10-01, 10:00 AM",
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Card(
-                              color: Colors.white54,
-                              child: Padding(
-                                padding: const EdgeInsets.all(4),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: const [
-                                    Icon(
-                                      Icons.check_circle,
-                                      color: Colors.blue,
-                                      size: 12,
-                                    ),
-                                    SizedBox(width: 5),
-                                    Text(
-                                      "Confirmed",
-                                      style: TextStyle(
-                                        color: Colors.blue,
-                                        fontSize: 8,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 25),
-                        const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Customer Name:",
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 14,
-                              ),
-                            ),
-                            SizedBox(height: 5),
-                            Text(
-                              "John Doe",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                                fontSize: 14,
-                              ),
-                            ),
-                            SizedBox(height: 5),
-                            Text(
-                              "Contact: +1 234 567 890",
-                              style: TextStyle(
-                                color: Colors.black87,
-                                fontSize: 12,
-                              ),
-                            ),
-                            SizedBox(height: 25),
-                            Text(
-                              "Items", // Fixed typo from "item" to "Items"
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 14,
-                              ),
-                            ),
-                            SizedBox(height: 5),
-                            Text(
-                              "2 items",
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                            SizedBox(height: 5),
-                            Text(
-                              "Margarita pizza x 1, Awesome Widget x 1",
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 14,
-                              ),
-                            ),
-                            SizedBox(height: 25),
-                            Text(
-                              "Total Amount: \$29.99",
-                              style: TextStyle(
-                                color: Colors.green,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            SizedBox(height: 10),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
+      // Bottom Navigation
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(30),
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 12,
-                  offset: Offset(0, 4),
-                ),
-              ],
-            ),
-            child: BottomNavigationBar(
-              backgroundColor: Colors.white,
-              selectedItemColor: Colors.deepPurpleAccent,
-              unselectedItemColor: Colors.grey,
-              type: BottomNavigationBarType.fixed,
-              items: const [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.dashboard, color: Colors.deepPurpleAccent),
-                  label: 'Dashboard',
-                  backgroundColor: Color(0xFFEDE7F6),
-                ),
-                
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.receipt_long, color: Colors.green),
-                  label: 'Orders',
-                  backgroundColor: Color(0xFFE8F5E9),
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.book, color: Colors.cyan),
-                  label: 'Menu',
-                  backgroundColor: Color(0xFFEDE7F6),
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.settings, color: Colors.amber),
-                  label: 'Settings',
-                  backgroundColor: Color(0xFFFFF8E1),
-                ),
-              ],
-              currentIndex: 1, // Orders tab is active
-              onTap: (index) {
-                if (index == 0) {
-                  Navigator.pushAndRemoveUntil(
+          child: BottomNavigationBar(
+            backgroundColor: Colors.white,
+            selectedItemColor: Colors.deepPurpleAccent,
+            unselectedItemColor: Colors.grey,
+            type: BottomNavigationBarType.fixed,
+            items: const [
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.dashboard), label: "Dashboard"),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.receipt_long), label: "Orders"),
+              BottomNavigationBarItem(icon: Icon(Icons.book), label: "Menu"),
+              BottomNavigationBarItem(
+                  icon: Icon(Icons.settings), label: "Settings"),
+            ],
+            currentIndex: 1,
+            onTap: (index) {
+              if (index == 0) {
+                Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => Desh()),
-                    (route) => false, // Clear navigation stack
-                  );
-                } else if (index == 2) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) =>  Menu()),
-                  );
-                }
-                else if (index == 3) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) =>  Setting()),
-                  );
-                }
-
-
-              },
-              elevation: 0,
-              showUnselectedLabels: true,
-            ),
+                    MaterialPageRoute(builder: (_) => const Desh()),
+                    (route) => false);
+              } else if (index == 2) {
+                Navigator.push(
+                    context, MaterialPageRoute(builder: (_) => const Menu()));
+              } else if (index == 3) {
+                Navigator.push(
+                    context, MaterialPageRoute(builder: (_) => const Setting()));
+              }
+            },
           ),
         ),
       ),
     );
   }
 }
+
+// Extension helper for status capitalize
+extension StringCasingExtension on String {
+  String capitalize() {
+    if (isEmpty) return "";
+    return '${this[0].toUpperCase()}${substring(1)}';
+  }
+}  

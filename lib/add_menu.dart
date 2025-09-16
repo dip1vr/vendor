@@ -7,7 +7,7 @@
   import 'providers.dart';
 
   class AddMenu extends ConsumerWidget {
-    AddMenu({Key? key}) : super(key: key);
+    AddMenu({super.key});
 
     final TextEditingController nameController = TextEditingController();
     final TextEditingController categoryController = TextEditingController();

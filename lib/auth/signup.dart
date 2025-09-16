@@ -5,6 +5,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:vendor_fixed/desh.dart';  // ✅ Firebase Core
 
 class Signup extends StatefulWidget {
+  const Signup({super.key});
+
   @override
   _SignupState createState() => _SignupState();
 }
