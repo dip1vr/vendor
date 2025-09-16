@@ -52,9 +52,8 @@ keeping restaurant data and order history safe.
 # Auth
 
 
-<img width="373" height="805" alt="Screenshot 2025-09-16 235945" src="https://github.com/user-attachments/assets/6233e65a-ee3c-4d63-b9d5-412e0e151b81" />
-
-<img width="387" height="806" alt="Screenshot 2025-09-16 235933" src="https://github.com/user-attachments/assets/c214e94a-4010-477c-96f4-63f737b2a223" />
+<img width="250" alt="Screenshot 2025-09-16 235945" src="https://github.com/user-attachments/assets/6233e65a-ee3c-4d63-b9d5-412e0e151b81" />
+<img width="250" alt="Screenshot 2025-09-16 235933" src="https://github.com/user-attachments/assets/c214e94a-4010-477c-96f4-63f737b2a223" />
 
 
 # Home Screen
@@ -84,8 +83,6 @@ keeping restaurant data and order history safe.
 # Setting Page 
 
 <img width="250" alt="Screenshot 2025-09-17 003124" src="https://github.com/user-attachments/assets/955d632a-a673-473a-91cd-e5af298f07dc" />
-
-<img width="2505" alt="Screenshot 2025-09-17 003112" src="https://github.com/user-attachments/assets/d8255c2c-2545-47e9-8d33-cdce75cff302" />
-
+<img width="250" alt="Screenshot 2025-09-17 003112" src="https://github.com/user-attachments/assets/d8255c2c-2545-47e9-8d33-cdce75cff302" />
 <img width="250" alt="Screenshot 2025-09-17 003101" src="https://github.com/user-attachments/assets/eef065b7-e5db-4f28-806d-4136b1943758" />
 
