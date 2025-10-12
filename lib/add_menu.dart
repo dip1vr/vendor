@@ -7,7 +7,7 @@
   import 'providers.dart';
 
   class AddMenu extends ConsumerWidget {
-    AddMenu({Key? key}) : super(key: key);
+    AddMenu({super.key});
 
     final TextEditingController nameController = TextEditingController();
     final TextEditingController categoryController = TextEditingController();
@@ -93,6 +93,7 @@
       }
 
       return Scaffold(
+        backgroundColor: Color(0xFF00D1B2), 
         body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(12),

@@ -58,7 +58,7 @@ class _SettingState extends State<Setting> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7E5EC),
+      backgroundColor: Color(0xFF00D1B2), 
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(12.0),
@@ -139,10 +139,10 @@ class _SettingState extends State<Setting> with TickerProviderStateMixin {
                                   onEdit: () => showEditDialog('cuisineType', data['cuisineType'] ?? "Italian, Chinese", "Cuisine Type"),
                                 ),
                                 sectionItem(
-                                  "GSTIN / Business ID",
+                                  "Average Prepair Time",
                                   Icons.description,
-                                  data['gstin'] ?? "29ABCDE1234F2Z5",
-                                  onEdit: () => showEditDialog('gstin', data['gstin'] ?? "29ABCDE1234F2Z5", "GSTIN / Business ID"),
+                                  data['prepairTime'] ?? "10-15 min",
+                                  onEdit: () => showEditDialog('prepairTime', data['prepairTime'] ?? "10-15 min", "Average Prepair Time"),
                                 ),
                                 sectionItem(
                                   "Working Hours",

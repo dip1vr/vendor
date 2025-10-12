@@ -20,7 +20,7 @@ void main() async {
       ),
     );
     print("✅ Firebase Initialized Successfully!");
-  } catch (e) {
+  } catch (e) {  
     print("❌ Firebase Initialization Failed: $e");
   }
 

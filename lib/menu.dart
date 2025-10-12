@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart' hide Order;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'add_menu.dart';
 import 'menu_item.dart';
 import 'desh.dart';
 import 'setting.dart';
-
+import 'order.dart';
 class Menu extends StatefulWidget {
   const Menu({super.key});
 
@@ -38,12 +38,12 @@ class _MenuState extends State<Menu> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7E5EC),
+      backgroundColor: Color(0xFF00D1B2), 
       body: SingleChildScrollView(
         child: SafeArea(
           child: Container(
             padding: const EdgeInsets.all(8.0),
-            color: const Color(0xFFF7E5EC),
+            color: const Color(0xFF00D1B2), 
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -595,7 +595,15 @@ class _MenuState extends State<Menu> {
                     context,
                     MaterialPageRoute(builder: (context) => Desh()),
                   );
-                } else if (index == 3) {
+                  
+
+                } if (index == 1) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => Order()),
+                  );
+                }
+                 else if (index == 3) {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(builder: (context) => Setting()),
