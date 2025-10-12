@@ -58,7 +58,7 @@ class _SettingState extends State<Setting> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7E5EC),
+      backgroundColor: Color(0xFF00D1B2), 
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(12.0),

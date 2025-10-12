@@ -38,12 +38,12 @@ class _MenuState extends State<Menu> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7E5EC),
+      backgroundColor: Color(0xFF00D1B2), 
       body: SingleChildScrollView(
         child: SafeArea(
           child: Container(
             padding: const EdgeInsets.all(8.0),
-            color: const Color(0xFFF7E5EC),
+            color: const Color(0xFF00D1B2), 
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

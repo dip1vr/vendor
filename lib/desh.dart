@@ -91,110 +91,152 @@ class _DeshState extends ConsumerState<Desh> {
   Widget build(BuildContext context) {
     final isOn = ref.watch(toggleProvider);
     return Scaffold(
-      backgroundColor: const Color(0xFFF7E5EC),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFF7E5EC),
-        title: const Text(
-          'Dashboard',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 14.0,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
-      ),
-      body: Container(
-        decoration: const BoxDecoration(color: Color(0xFFF7E5EC)),
-        margin: const EdgeInsets.all(10.0),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              const Text(
-                "Welcome back to KFD Restaurant",
-                style: TextStyle(fontSize: 12.0, color: Colors.black),
+      backgroundColor: Color(0xFF00D1B2), // Soft neutral gray for elegance
+  body: SafeArea(
+    child: Container(
+      color: Color(0xFF00D1B2), 
+      padding: EdgeInsets.all(16.0), // Clean padding
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: EdgeInsets.all(12.0),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.4),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: Offset(0, 4),
+                  ),
+                ],
               ),
-              const SizedBox(height: 20.0),
-              Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     "Restaurant Status",
                     style: TextStyle(
-                      fontSize: 14.0,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      fontSize: 16.0,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1A2A44), // Deep slate for text
                     ),
                   ),
                   FlutterSwitch(
-                    width: 50.0,
-                    height: 25.0,
-                    toggleSize: 15.0,
+                    width: 60.0,
+                    height: 30.0,
+                    toggleSize: 22.0,
                     value: isOn,
                     borderRadius: 30.0,
-                    padding: 5.0,
+                    padding: 4.0,
                     activeToggleColor: Colors.white,
                     inactiveToggleColor: Colors.white,
-                    activeColor: Colors.green,
-                    inactiveColor: Colors.redAccent,
-                    activeIcon: const Icon(Icons.check, color: Colors.green),
-                    inactiveIcon: const Icon(
-                      Icons.close,
-                      color: Colors.redAccent,
-                    ),
+                    activeColor: Colors.green.shade400, // Bright teal
+                    inactiveColor: Colors.red, // Warm orange
+                    activeIcon: Icon(Icons.check, color: Color(0xFF00D1B2), size: 18),
+                    inactiveIcon: Icon(Icons.close, color: Color(0xFFF28C38), size: 18),
                     onToggle: (val) {
                       ref.read(toggleProvider.notifier).state = val;
                     },
                   ),
                 ],
               ),
-              const SizedBox(height: 20.0),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Card(
-                      color: Colors.blue[50],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                      elevation: 4.0,
-                      child: Container(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Stack(
-                          children: [
-                            vendorId == null
-                                ? const Center(
-                                    child: Text(
-                                      "Vendor not logged in",
-                                      style: TextStyle(
-                                        fontSize: 14.0,
-                                        color: Colors.grey,
+            ),        const SizedBox(height: 20.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Card(
+                        color: Colors.blue[50],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                        elevation: 4.0,
+                        child: Container(
+                          padding: const EdgeInsets.all(10.0),
+                          child: Stack(
+                            children: [
+                              vendorId == null
+                                  ? const Center(
+                                      child: Text(
+                                        "Vendor not logged in",
+                                        style: TextStyle(
+                                          fontSize: 14.0,
+                                          color: Colors.grey,
+                                        ),
                                       ),
-                                    ),
-                                  )
-                                : StreamBuilder<QuerySnapshot>(
-                                    stream: FirebaseFirestore.instance
-                                        .collection('vendors')
-                                        .doc(vendorId)
-                                        .collection('orders')
-                                        .where(
-                                          'completedAt',
-                                          isGreaterThanOrEqualTo:
-                                              Timestamp.fromDate(
-                                                _getDateRange()['start']!,
+                                    )
+                                  : StreamBuilder<QuerySnapshot>(
+                                      stream: FirebaseFirestore.instance
+                                          .collection('vendors')
+                                          .doc(vendorId)
+                                          .collection('orders')
+                                          .where(
+                                            'completedAt',
+                                            isGreaterThanOrEqualTo:
+                                                Timestamp.fromDate(
+                                                  _getDateRange()['start']!,
+                                                ),
+                                          )
+                                          .where(
+                                            'completedAt',
+                                            isLessThan: Timestamp.fromDate(
+                                              _getDateRange()['end']!,
+                                            ),
+                                          )
+                                          .snapshots(),
+                                      builder: (context, snapshot) {
+                                        if (snapshot.connectionState ==
+                                            ConnectionState.waiting) {
+                                          return Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                "Today's Orders",
+                                                style: TextStyle(
+                                                  fontSize: 12.0,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.black87,
+                                                ),
                                               ),
-                                        )
-                                        .where(
-                                          'completedAt',
-                                          isLessThan: Timestamp.fromDate(
-                                            _getDateRange()['end']!,
-                                          ),
-                                        )
-                                        .snapshots(),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.connectionState ==
-                                          ConnectionState.waiting) {
+                                              const SizedBox(height: 25),
+                                              const BlurLineLoading(),
+                                              StreamBuilder<QuerySnapshot>(
+                                                stream: FirebaseFirestore.instance
+                                                    .collection('vendors')
+                                                    .doc(vendorId)
+                                                    .collection('orders')
+                                                    .where(
+                                                      'status',
+                                                      isEqualTo: 'accepted',
+                                                    )
+                                                    .snapshots(),
+                                                builder: (context, snapshot) {
+                                                  int newOrders = 0;
+                                                  if (snapshot.hasData) {
+                                                    newOrders =
+                                                        snapshot.data!.docs.length;
+                                                  }
+                                                  return Text(
+                                                    "$newOrders New order",
+                                                    style: const TextStyle(
+                                                      fontSize: 10.0,
+                                                      color: Colors.black54,
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                            ],
+                                          );
+                                        }
+                                        int orderCount = 0;
+                                        if (snapshot.hasData) {
+                                          orderCount = snapshot.data!.docs.length;
+                                        }
+    
                                         return Column(
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
@@ -208,7 +250,13 @@ class _DeshState extends ConsumerState<Desh> {
                                               ),
                                             ),
                                             const SizedBox(height: 25),
-                                            const BlurLineLoading(),
+                                            Text(
+                                              'Orders: $orderCount',
+                                              style: const TextStyle(
+                                                fontSize: 18.0,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
                                             StreamBuilder<QuerySnapshot>(
                                               stream: FirebaseFirestore.instance
                                                   .collection('vendors')
@@ -236,119 +284,100 @@ class _DeshState extends ConsumerState<Desh> {
                                             ),
                                           ],
                                         );
-                                      }
-                                      int orderCount = 0;
-                                      if (snapshot.hasData) {
-                                        orderCount = snapshot.data!.docs.length;
-                                      }
-
-                                      return Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          const Text(
-                                            "Today's Orders",
-                                            style: TextStyle(
-                                              fontSize: 12.0,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.black87,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 25),
-                                          Text(
-                                            'Orders: $orderCount',
-                                            style: const TextStyle(
-                                              fontSize: 18.0,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          StreamBuilder<QuerySnapshot>(
-                                            stream: FirebaseFirestore.instance
-                                                .collection('vendors')
-                                                .doc(vendorId)
-                                                .collection('orders')
-                                                .where(
-                                                  'status',
-                                                  isEqualTo: 'accepted',
-                                                )
-                                                .snapshots(),
-                                            builder: (context, snapshot) {
-                                              int newOrders = 0;
-                                              if (snapshot.hasData) {
-                                                newOrders =
-                                                    snapshot.data!.docs.length;
-                                              }
-                                              return Text(
-                                                "$newOrders New order",
-                                                style: const TextStyle(
-                                                  fontSize: 10.0,
-                                                  color: Colors.black54,
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  ),
-                            Positioned(
-                              top: 0,
-                              right: 0,
-                              child: Icon(
-                                Icons.shopping_cart,
-                                size: 20.0,
-                                color: Colors.deepPurpleAccent,
+                                      },
+                                    ),
+                              Positioned(
+                                top: 0,
+                                right: 0,
+                                child: Icon(
+                                  Icons.shopping_cart,
+                                  size: 20.0,
+                                  color: Colors.deepPurpleAccent,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 10.0),
-                  Expanded(
-                    child: Card(
-                      color: Colors.yellow[50],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                      elevation: 4.0,
-                      child: Container(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Stack(
-                          children: [
-                            vendorId == null
-                                ? const Center(
-                                    child: Text(
-                                      "Vendor not logged in",
-                                      style: TextStyle(
-                                        fontSize: 14.0,
-                                        color: Colors.grey,
+                    const SizedBox(width: 10.0),
+                    Expanded(
+                      child: Card(
+                        color: Colors.yellow[50],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                        elevation: 4.0,
+                        child: Container(
+                          padding: const EdgeInsets.all(10.0),
+                          child: Stack(
+                            children: [
+                              vendorId == null
+                                  ? const Center(
+                                      child: Text(
+                                        "Vendor not logged in",
+                                        style: TextStyle(
+                                          fontSize: 14.0,
+                                          color: Colors.grey,
+                                        ),
                                       ),
-                                    ),
-                                  )
-                                : StreamBuilder<QuerySnapshot>(
-                                    stream: FirebaseFirestore.instance
-                                        .collection('vendors')
-                                        .doc(vendorId)
-                                        .collection('orders')
-                                        .where(
-                                          'completedAt',
-                                          isGreaterThanOrEqualTo:
-                                              Timestamp.fromDate(
-                                                _getDateRange()['start']!,
+                                    )
+                                  : StreamBuilder<QuerySnapshot>(
+                                      stream: FirebaseFirestore.instance
+                                          .collection('vendors')
+                                          .doc(vendorId)
+                                          .collection('orders')
+                                          .where(
+                                            'completedAt',
+                                            isGreaterThanOrEqualTo:
+                                                Timestamp.fromDate(
+                                                  _getDateRange()['start']!,
+                                                ),
+                                          )
+                                          .where(
+                                            'completedAt',
+                                            isLessThan: Timestamp.fromDate(
+                                              _getDateRange()['end']!,
+                                            ),
+                                          )
+                                          .snapshots(),
+                                      builder: (context, snapshot) {
+                                        if (snapshot.connectionState ==
+                                            ConnectionState.waiting) {
+                                          return Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                "Total Revenue",
+                                                style: TextStyle(
+                                                  fontSize: 12.0,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.black87,
+                                                ),
                                               ),
-                                        )
-                                        .where(
-                                          'completedAt',
-                                          isLessThan: Timestamp.fromDate(
-                                            _getDateRange()['end']!,
-                                          ),
-                                        )
-                                        .snapshots(),
-                                    builder: (context, snapshot) {
-                                      if (snapshot.connectionState ==
-                                          ConnectionState.waiting) {
+                                              const SizedBox(height: 25),
+                                              const BlurLineLoading(),
+                                              const Text(
+                                                "Total revenue today",
+                                                style: TextStyle(
+                                                  fontSize: 10.0,
+                                                  color: Colors.black54,
+                                                ),
+                                              ),
+                                            ],
+                                          );
+                                        }
+                                        double totalRevenue = 0.0;
+                                        if (snapshot.hasData &&
+                                            snapshot.data!.docs.isNotEmpty) {
+                                          for (var doc in snapshot.data!.docs) {
+                                            final data = doc.data()
+                                                as Map<String, dynamic>;
+                                            totalRevenue += (data['total'] ?? 0)
+                                                .toDouble();
+                                          }
+                                        }
                                         return Column(
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
@@ -362,7 +391,13 @@ class _DeshState extends ConsumerState<Desh> {
                                               ),
                                             ),
                                             const SizedBox(height: 25),
-                                            const BlurLineLoading(),
+                                            Text(
+                                              '₹ ${totalRevenue.toStringAsFixed(2)}',
+                                              style: const TextStyle(
+                                                fontSize: 18.0,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
                                             const Text(
                                               "Total revenue today",
                                               style: TextStyle(
@@ -372,85 +407,255 @@ class _DeshState extends ConsumerState<Desh> {
                                             ),
                                           ],
                                         );
-                                      }
-                                      double totalRevenue = 0.0;
+                                      },
+                                    ),
+                              Positioned(
+                                top: 0,
+                                right: 0,
+                                child: Icon(
+                                  Icons.attach_money,
+                                  size: 20.0,
+                                  color: Colors.greenAccent,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10.0),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Card(
+                        color: Colors.green[50],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                        elevation: 4.0,
+                        child: SizedBox(
+                          height: 120, // fixed height
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: vendorId == null
+                                ? const Center(
+                                    child: Text(
+                                      "Vendor not logged in",
+                                      style: TextStyle(
+                                          fontSize: 14.0, color: Colors.grey),
+                                    ),
+                                  )
+                                : StreamBuilder<QuerySnapshot>(
+                                    stream: FirebaseFirestore.instance
+                                        .collection('vendors')
+                                        .doc(vendorId)
+                                        .collection('orders')
+                                        .snapshots(),
+                                    builder: (context, snapshot) {
+                                      // Always show content space
+                                      Map<String, int> itemCount = {};
+                                      String mostOrderedItem = "N/A";
+                                      int maxCount = 0;
+    
                                       if (snapshot.hasData &&
                                           snapshot.data!.docs.isNotEmpty) {
                                         for (var doc in snapshot.data!.docs) {
-                                          final data = doc.data()
-                                              as Map<String, dynamic>;
-                                          totalRevenue += (data['total'] ?? 0)
-                                              .toDouble();
+                                          final data =
+                                              doc.data() as Map<String, dynamic>;
+                                          final items =
+                                              data['items'] as List<dynamic>? ??
+                                                  [];
+    
+                                          for (var item in items) {
+                                            if (item is Map<String, dynamic>) {
+                                              final title = item['title']
+                                                      ?.toString() ??
+                                                  'Unknown';
+                                              final quantity = item['quantity']
+                                                      is int
+                                                  ? item['quantity'] as int
+                                                  : int.tryParse(item['quantity']
+                                                          ?.toString() ??
+                                                      '0') ??
+                                                  0;
+                                              itemCount[title] =
+                                                  (itemCount[title] ?? 0) +
+                                                      quantity;
+                                            }
+                                          }
                                         }
+    
+                                        itemCount.forEach((key, value) {
+                                          if (value > maxCount) {
+                                            maxCount = value;
+                                            mostOrderedItem = key;
+                                          }
+                                        });
                                       }
-                                      return Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+    
+                                      return Stack(
                                         children: [
-                                          const Text(
-                                            "Total Revenue",
-                                            style: TextStyle(
-                                              fontSize: 12.0,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.black87,
-                                            ),
+                                          Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                "Most Ordered Item",
+                                                style: TextStyle(
+                                                    fontSize: 12.0,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.black87),
+                                              ),
+                                              const SizedBox(height: 20),
+                                              Text(
+                                                mostOrderedItem,
+                                                style: const TextStyle(
+                                                    fontSize: 18.0,
+                                                    fontWeight: FontWeight.bold),
+                                              ),
+                                              Text(
+                                                "Total ordered quantity: $maxCount",
+                                                style: const TextStyle(
+                                                    fontSize: 10.0,
+                                                    color: Colors.black54),
+                                              ),
+                                            ],
                                           ),
-                                          const SizedBox(height: 25),
-                                          Text(
-                                            '₹ ${totalRevenue.toStringAsFixed(2)}',
-                                            style: const TextStyle(
-                                              fontSize: 18.0,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          const Text(
-                                            "Total revenue today",
-                                            style: TextStyle(
-                                              fontSize: 10.0,
-                                              color: Colors.black54,
+                                          Positioned(
+                                            top: 0,
+                                            right: 0,
+                                            child: Icon(
+                                              Icons.restaurant_menu,
+                                              size: 20.0,
+                                              color: Colors.amberAccent,
                                             ),
                                           ),
                                         ],
                                       );
                                     },
                                   ),
-                            Positioned(
-                              top: 0,
-                              right: 0,
-                              child: Icon(
-                                Icons.attach_money,
-                                size: 20.0,
-                                color: Colors.greenAccent,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10.0),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Card(
-                      color: Colors.green[50],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.0),
+                    const SizedBox(width: 10.0),
+                    Expanded(
+                      child: Card(
+                        color: Colors.indigo[50],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10.0),
+                        ),
+                        elevation: 4.0,
+                        child: Container(
+                          padding: const EdgeInsets.all(10.0),
+                          child: Stack(
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: const [
+                                  Text(
+                                    "Restaurant Status",
+                                    style: TextStyle(
+                                      fontSize: 12.0,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  SizedBox(height: 25),
+                                  Text(
+                                    'Open',
+                                    style: TextStyle(
+                                      fontSize: 18.0,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    "Time: 10:00 AM - 11:00 PM",
+                                    style: TextStyle(
+                                      fontSize: 10.0,
+                                      color: Colors.black54,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Positioned(
+                                top: 0,
+                                right: 0,
+                                child: Icon(
+                                  Icons.power_settings_new,
+                                  size: 20.0,
+                                  color: Colors.lightBlue,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
-                      elevation: 4.0,
-                      child: SizedBox(
-                        height: 120, // fixed height
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20.0),
+                Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20.0),
+                  ),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 10.0,
+                  ),
+                  color: Colors.white.withOpacity(0.4),
+                  shadowColor: Colors.black.withOpacity(0.5),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: const [
+                                Icon(
+                                  Icons.shopping_bag,
+                                  color: Colors.blueAccent,
+                                  size: 22,
+                                ),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Recent Orders (Accepted)',
+                                  style: TextStyle(
+                                    fontSize: 18.0,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.refresh,
+                                color: Colors.blueAccent,
+                              ),
+                              onPressed: () {
+                                // refresh logic
+                              },
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16.0),
+                        SizedBox(
+                          height: 220.0,
                           child: vendorId == null
                               ? const Center(
                                   child: Text(
                                     "Vendor not logged in",
                                     style: TextStyle(
-                                        fontSize: 14.0, color: Colors.grey),
+                                      fontSize: 14.0,
+                                      color: Colors.grey,
+                                    ),
                                   ),
                                 )
                               : StreamBuilder<QuerySnapshot>(
@@ -458,362 +663,153 @@ class _DeshState extends ConsumerState<Desh> {
                                       .collection('vendors')
                                       .doc(vendorId)
                                       .collection('orders')
+                                      .where('status', isEqualTo: 'accepted')
                                       .snapshots(),
                                   builder: (context, snapshot) {
-                                    // Always show content space
-                                    Map<String, int> itemCount = {};
-                                    String mostOrderedItem = "N/A";
-                                    int maxCount = 0;
-
-                                    if (snapshot.hasData &&
-                                        snapshot.data!.docs.isNotEmpty) {
-                                      for (var doc in snapshot.data!.docs) {
-                                        final data =
-                                            doc.data() as Map<String, dynamic>;
-                                        final items =
-                                            data['items'] as List<dynamic>? ??
-                                                [];
-
-                                        for (var item in items) {
-                                          if (item is Map<String, dynamic>) {
-                                            final title = item['title']
-                                                    ?.toString() ??
-                                                'Unknown';
-                                            final quantity = item['quantity']
-                                                    is int
-                                                ? item['quantity'] as int
-                                                : int.tryParse(item['quantity']
-                                                        ?.toString() ??
-                                                    '0') ??
-                                                0;
-                                            itemCount[title] =
-                                                (itemCount[title] ?? 0) +
-                                                    quantity;
-                                          }
-                                        }
-                                      }
-
-                                      itemCount.forEach((key, value) {
-                                        if (value > maxCount) {
-                                          maxCount = value;
-                                          mostOrderedItem = key;
-                                        }
-                                      });
+                                    if (snapshot.connectionState ==
+                                        ConnectionState.waiting) {
+                                      return const Center(
+                                        child: CircularProgressIndicator(),
+                                      );
                                     }
-
-                                    return Stack(
-                                      children: [
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            const Text(
-                                              "Most Ordered Item",
-                                              style: TextStyle(
-                                                  fontSize: 12.0,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.black87),
-                                            ),
-                                            const SizedBox(height: 20),
-                                            Text(
-                                              mostOrderedItem,
-                                              style: const TextStyle(
-                                                  fontSize: 18.0,
-                                                  fontWeight: FontWeight.bold),
-                                            ),
-                                            Text(
-                                              "Total ordered quantity: $maxCount",
-                                              style: const TextStyle(
-                                                  fontSize: 10.0,
-                                                  color: Colors.black54),
-                                            ),
-                                          ],
-                                        ),
-                                        Positioned(
-                                          top: 0,
-                                          right: 0,
-                                          child: Icon(
-                                            Icons.restaurant_menu,
-                                            size: 20.0,
-                                            color: Colors.amberAccent,
+                                    if (!snapshot.hasData ||
+                                        snapshot.data!.docs.isEmpty) {
+                                      return const Center(
+                                        child: Text(
+                                          "No accepted orders yet",
+                                          style: TextStyle(
+                                            fontSize: 14.0,
+                                            color: Colors.grey,
                                           ),
                                         ),
-                                      ],
+                                      );
+                                    }
+    
+                                    final acceptedOrders = snapshot.data!.docs;
+                                    return ListView.builder(
+                                      itemCount: acceptedOrders.length,
+                                      itemBuilder: (context, index) {
+                                        final order = acceptedOrders[index].data()
+                                            as Map<String, dynamic>;
+                                        return Container(
+                                          margin: const EdgeInsets.symmetric(
+                                            vertical: 6.0,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              colors: [
+                                                Colors.green.shade100,
+                                                Colors.green.shade50,
+                                              ],
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              15.0,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color:
+                                                    Colors.green.withOpacity(0.1),
+                                                blurRadius: 5,
+                                                offset: const Offset(2, 2),
+                                              ),
+                                            ],
+                                          ),
+                                          child: ListTile(
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                              horizontal: 12,
+                                              vertical: 6,
+                                            ),
+                                            leading: CircleAvatar(
+                                              backgroundColor:
+                                                  Colors.green.shade300,
+                                              child: const Icon(
+                                                Icons.receipt_long,
+                                                color: Colors.white,
+                                                size: 20.0,
+                                              ),
+                                            ),
+                                            title: Text(
+                                              "Order #${order['orderId']}",
+                                              style: const TextStyle(
+                                                fontSize: 15.0,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.black87,
+                                              ),
+                                            ),
+                                            subtitle: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  "Customer: ${order['customerId']}",
+                                                  style: TextStyle(
+                                                    fontSize: 13.0,
+                                                    color: Colors.grey[700],
+                                                  ),
+                                                ),
+                                                Text(
+                                                  "Price: ₹${order['total'] ?? 0}",
+                                                  style: const TextStyle(
+                                                    fontSize: 13.0,
+                                                    color: Colors.black87,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            trailing: TextButton(
+                                              style: TextButton.styleFrom(
+                                                backgroundColor:
+                                                    Colors.green.shade600,
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                  horizontal: 12,
+                                                  vertical: 6,
+                                                ),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(20),
+                                                ),
+                                              ),
+                                              onPressed: () async {
+                                                await FirebaseFirestore.instance
+                                                    .collection('vendors')
+                                                    .doc(vendorId)
+                                                    .collection('orders')
+                                                    .doc(order['orderId'])
+                                                    .update({
+                                                  'status': 'completed',
+                                                  'completedAt':
+                                                      FieldValue.serverTimestamp(),
+                                                });
+                                              },
+                                              child: const Text(
+                                                "Completed",
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
                                     );
                                   },
                                 ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 10.0),
-                  Expanded(
-                    child: Card(
-                      color: Colors.indigo[50],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                      elevation: 4.0,
-                      child: Container(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Stack(
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: const [
-                                Text(
-                                  "Restaurant Status",
-                                  style: TextStyle(
-                                    fontSize: 12.0,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                                SizedBox(height: 25),
-                                Text(
-                                  'Open',
-                                  style: TextStyle(
-                                    fontSize: 18.0,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  "Time: 10:00 AM - 11:00 PM",
-                                  style: TextStyle(
-                                    fontSize: 10.0,
-                                    color: Colors.black54,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Positioned(
-                              top: 0,
-                              right: 0,
-                              child: Icon(
-                                Icons.power_settings_new,
-                                size: 20.0,
-                                color: Colors.lightBlue,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20.0),
-              Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20.0),
                 ),
-                margin: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 10.0,
-                ),
-                color: Colors.white.withOpacity(0.4),
-                shadowColor: Colors.black.withOpacity(0.5),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: const [
-                              Icon(
-                                Icons.shopping_bag,
-                                color: Colors.blueAccent,
-                                size: 22,
-                              ),
-                              SizedBox(width: 8),
-                              Text(
-                                'Recent Orders (Accepted)',
-                                style: TextStyle(
-                                  fontSize: 18.0,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ],
-                          ),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.refresh,
-                              color: Colors.blueAccent,
-                            ),
-                            onPressed: () {
-                              // refresh logic
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16.0),
-                      SizedBox(
-                        height: 220.0,
-                        child: vendorId == null
-                            ? const Center(
-                                child: Text(
-                                  "Vendor not logged in",
-                                  style: TextStyle(
-                                    fontSize: 14.0,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              )
-                            : StreamBuilder<QuerySnapshot>(
-                                stream: FirebaseFirestore.instance
-                                    .collection('vendors')
-                                    .doc(vendorId)
-                                    .collection('orders')
-                                    .where('status', isEqualTo: 'accepted')
-                                    .snapshots(),
-                                builder: (context, snapshot) {
-                                  if (snapshot.connectionState ==
-                                      ConnectionState.waiting) {
-                                    return const Center(
-                                      child: CircularProgressIndicator(),
-                                    );
-                                  }
-                                  if (!snapshot.hasData ||
-                                      snapshot.data!.docs.isEmpty) {
-                                    return const Center(
-                                      child: Text(
-                                        "No accepted orders yet",
-                                        style: TextStyle(
-                                          fontSize: 14.0,
-                                          color: Colors.grey,
-                                        ),
-                                      ),
-                                    );
-                                  }
-
-                                  final acceptedOrders = snapshot.data!.docs;
-                                  return ListView.builder(
-                                    itemCount: acceptedOrders.length,
-                                    itemBuilder: (context, index) {
-                                      final order = acceptedOrders[index].data()
-                                          as Map<String, dynamic>;
-                                      return Container(
-                                        margin: const EdgeInsets.symmetric(
-                                          vertical: 6.0,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              Colors.green.shade100,
-                                              Colors.green.shade50,
-                                            ],
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            15.0,
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color:
-                                                  Colors.green.withOpacity(0.1),
-                                              blurRadius: 5,
-                                              offset: const Offset(2, 2),
-                                            ),
-                                          ],
-                                        ),
-                                        child: ListTile(
-                                          contentPadding:
-                                              const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                            vertical: 6,
-                                          ),
-                                          leading: CircleAvatar(
-                                            backgroundColor:
-                                                Colors.green.shade300,
-                                            child: const Icon(
-                                              Icons.receipt_long,
-                                              color: Colors.white,
-                                              size: 20.0,
-                                            ),
-                                          ),
-                                          title: Text(
-                                            "Order #${order['orderId']}",
-                                            style: const TextStyle(
-                                              fontSize: 15.0,
-                                              fontWeight: FontWeight.w600,
-                                              color: Colors.black87,
-                                            ),
-                                          ),
-                                          subtitle: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                "Customer: ${order['customerId']}",
-                                                style: TextStyle(
-                                                  fontSize: 13.0,
-                                                  color: Colors.grey[700],
-                                                ),
-                                              ),
-                                              Text(
-                                                "Price: ₹${order['total'] ?? 0}",
-                                                style: const TextStyle(
-                                                  fontSize: 13.0,
-                                                  color: Colors.black87,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          trailing: TextButton(
-                                            style: TextButton.styleFrom(
-                                              backgroundColor:
-                                                  Colors.green.shade600,
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                horizontal: 12,
-                                                vertical: 6,
-                                              ),
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                              ),
-                                            ),
-                                            onPressed: () async {
-                                              await FirebaseFirestore.instance
-                                                  .collection('vendors')
-                                                  .doc(vendorId)
-                                                  .collection('orders')
-                                                  .doc(order['orderId'])
-                                                  .update({
-                                                'status': 'completed',
-                                                'completedAt':
-                                                    FieldValue.serverTimestamp(),
-                                              });
-                                            },
-                                            child: const Text(
-                                              "Completed",
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  );
-                                },
-                              ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20.0),
-            ],
+                const SizedBox(height: 20.0),
+              ],
+            ),
           ),
         ),
-      ),
+  ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
         child: ClipRRect(

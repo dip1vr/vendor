@@ -93,6 +93,7 @@
       }
 
       return Scaffold(
+        backgroundColor: Color(0xFF00D1B2), 
         body: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(12),
