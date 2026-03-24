@@ -1,13 +1,26 @@
 import 'package:device_preview/device_preview.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get_navigation/get_navigation.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:vendor_fixed/auth/login.dart';
+import 'package:vendor_fixed/main_layout.dart';
+
+import 'package:vendor_fixed/controllers/theme_controller.dart';
+
+import 'package:flutter/services.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      systemNavigationBarColor: Colors.transparent, // navigation bar color
+      statusBarColor: Colors.transparent, // status bar color
+    ),
+  );
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
   try {
     await Firebase.initializeApp(
@@ -20,7 +33,7 @@ void main() async {
       ),
     );
     print("✅ Firebase Initialized Successfully!");
-  } catch (e) {  
+  } catch (e) {
     print("❌ Firebase Initialization Failed: $e");
   }
 
@@ -32,6 +45,13 @@ void main() async {
   );
 }
 
+class InitialBinding extends Bindings {
+  @override
+  void dependencies() {
+    Get.put(ThemeController());
+  }
+}
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -39,11 +59,28 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        textTheme: GoogleFonts.latoTextTheme(),
-      ),
-      home: Scaffold(
-        body: LoginPage(),
+      initialBinding: InitialBinding(),
+      theme: ThemeData(textTheme: GoogleFonts.latoTextTheme()),
+      home: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          // If the stream is waiting, show a loading indicator
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              body: Center(
+                child: CircularProgressIndicator(color: Color(0xFFFF5722)),
+              ),
+            );
+          }
+
+          // If we have a user, go to MainLayout (Persistent Bottom Nav)
+          if (snapshot.hasData) {
+            return const MainLayout();
+          }
+
+          // Otherwise, go to Login
+          return const LoginPage();
+        },
       ),
     );
   }

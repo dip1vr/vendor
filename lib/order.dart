@@ -1,288 +1,436 @@
+import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:vendor_fixed/desh.dart';
-import 'package:vendor_fixed/menu.dart';
-import 'package:vendor_fixed/setting.dart';
+import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:vendor_fixed/controllers/order_controller.dart';
+import 'package:vendor_fixed/controllers/theme_controller.dart';
+import 'package:vendor_fixed/widgets/shimmer_loading.dart';
 
-class Order extends StatefulWidget {
+class Order extends StatelessWidget {
   const Order({super.key});
 
   @override
-  State<Order> createState() => _OrderState();
-}
+  Widget build(BuildContext context) {
+    final OrderController controller = Get.put(OrderController());
+    final ThemeController themeController = controller.themeController;
 
-class _OrderState extends State<Order> {
-  String? vendorId;
-  String selectedFilter = "All";
+    return Obx(
+      () => Stack(
+        children: [
+          // 1. Background Gradient
+          _AnimatedGradientBackground(
+            colors: themeController.backgroundGradient,
+          ),
 
-  @override
-  void initState() {
-    super.initState();
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      vendorId = user.uid;
-    }
+          // 2. Main Content
+          SafeArea(
+            bottom: false,
+            child: Column(
+              children: [
+                const SizedBox(height: 10),
+                // Header
+                _buildHeader(controller, themeController),
+
+                const SizedBox(height: 20),
+
+                // Filters
+                _buildFilters(controller, themeController),
+
+                const SizedBox(height: 20),
+
+                // Orders List
+                Expanded(
+                  child: controller.vendorId.value.isEmpty
+                      ? Center(
+                          child: Text(
+                            "Vendor not logged in",
+                            style: GoogleFonts.outfit(
+                              color: themeController.primaryText,
+                            ),
+                          ),
+                        )
+                      : StreamBuilder<QuerySnapshot>(
+                          stream: controller.ordersStream,
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return ListView.builder(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                ),
+                                itemCount: 5,
+                                itemBuilder: (context, index) =>
+                                    ShimmerWidgets.orderHistorySkeleton(),
+                              );
+                            }
+                            if (!snapshot.hasData ||
+                                snapshot.data!.docs.isEmpty) {
+                              return Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.inbox_outlined,
+                                      size: 48,
+                                      color: themeController.secondaryText,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      "No orders found",
+                                      style: GoogleFonts.outfit(
+                                        color: themeController.secondaryText,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+                            final orders = snapshot.data!.docs;
+                            // Client-side sorting because we removed OrderBy to prevent index issues
+                            orders.sort((a, b) {
+                              final dataA = a.data() as Map<String, dynamic>;
+                              final dataB = b.data() as Map<String, dynamic>;
+                              final timeA =
+                                  (dataA['acceptedAt'] as Timestamp?)
+                                      ?.toDate() ??
+                                  (dataA['createdAt'] as Timestamp?)
+                                      ?.toDate() ??
+                                  DateTime.now();
+                              final timeB =
+                                  (dataB['acceptedAt'] as Timestamp?)
+                                      ?.toDate() ??
+                                  (dataB['createdAt'] as Timestamp?)
+                                      ?.toDate() ??
+                                  DateTime.now();
+                              return timeB.compareTo(timeA);
+                            });
+                            return ListView.builder(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                              ),
+                              physics: const BouncingScrollPhysics(),
+                              itemCount:
+                                  orders.length + 1, // +1 for spacing at bottom
+                              itemBuilder: (context, index) {
+                                if (index == orders.length) {
+                                  return const SizedBox(
+                                    height: 100,
+                                  ); // Bottom padding for nav bar
+                                }
+                                final order =
+                                    orders[index].data()
+                                        as Map<String, dynamic>;
+                                return _buildOrderCard(order, themeController);
+                              },
+                            );
+                          },
+                        ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
-  // Firestore query based on filter
-  Stream<QuerySnapshot> _getOrders() {
-    final baseQuery = FirebaseFirestore.instance
-        .collection("vendors")
-        .doc(vendorId)
-        .collection("orders");
-       
-    if (selectedFilter == "All") return baseQuery.snapshots();
-
-    return baseQuery
-        .where("status", isEqualTo: selectedFilter.toLowerCase())
-        .snapshots();
+  Widget _buildHeader(
+    OrderController controller,
+    ThemeController themeController,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Orders",
+                style: GoogleFonts.outfit(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: themeController.primaryText,
+                ),
+              ),
+              Text(
+                "Manage your orders",
+                style: GoogleFonts.outfit(
+                  fontSize: 14,
+                  color: themeController.secondaryText,
+                ),
+              ),
+            ],
+          ),
+          _GlassContainer(
+            padding: const EdgeInsets.all(10),
+            borderRadius: 14,
+            color: themeController.glassColor,
+            borderColor: themeController.glassBorderColor,
+            child: Icon(
+              Icons.filter_list,
+              color: Colors.deepOrangeAccent,
+              size: 24,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
-  Widget _buildOrderCard(Map<String, dynamic> order) {
+  Widget _buildFilters(
+    OrderController controller,
+    ThemeController themeController,
+  ) {
+    final filters = ["All", "Accepted", "Completed", "Rejected"];
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: filters.map((filter) {
+          return Obx(() {
+            final isSelected = controller.selectedFilter.value == filter;
+            return Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: GestureDetector(
+                onTap: () {
+                  controller.setFilter(filter);
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? Colors.deepOrangeAccent
+                        : themeController.glassColor,
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(
+                      color: isSelected
+                          ? Colors.deepOrangeAccent
+                          : themeController.glassBorderColor,
+                    ),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: Colors.deepOrangeAccent.withOpacity(0.3),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ]
+                        : [],
+                  ),
+                  child: Text(
+                    filter,
+                    style: GoogleFonts.outfit(
+                      fontSize: 14,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.w500,
+                      color: isSelected
+                          ? Colors.white
+                          : themeController.secondaryText,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          });
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildOrderCard(
+    Map<String, dynamic> order,
+    ThemeController themeController,
+  ) {
     final orderId = order["orderId"] ?? "N/A";
-    final customerId = order["customerId"] ?? "Unknown";
     final total = order["total"] ?? 0;
     final items = (order["items"] ?? []) as List<dynamic>;
-    
-
     final status = order["status"] ?? "pending";
 
-    // Status color and label
     Color statusColor;
     String statusLabel;
     IconData statusIcon;
 
     switch (status) {
       case "accepted":
-        statusColor = Colors.blue;
+        statusColor = Colors.blueAccent;
         statusLabel = "Accepted";
-        statusIcon = Icons.check_circle;
+        statusIcon = Icons.check_circle_outline;
         break;
       case "completed":
         statusColor = Colors.green;
         statusLabel = "Completed";
-        statusIcon = Icons.done_all;
+        statusIcon = Icons.task_alt;
         break;
       case "rejected":
-        statusColor = Colors.red;
+        statusColor = Colors.redAccent;
         statusLabel = "Cancelled";
-        statusIcon = Icons.cancel;
+        statusIcon = Icons.cancel_outlined;
         break;
       default:
-        statusColor = Colors.orange;
-        statusLabel = status.capitalize(); // helper
+        statusColor = Colors.orangeAccent;
+        statusLabel = status.capitalize();
         statusIcon = Icons.hourglass_empty;
     }
 
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: _GlassContainer(
+        padding: const EdgeInsets.all(16),
+        color: themeController.glassColor,
+        borderColor: themeController.glassBorderColor,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Order ID + Status
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Order ID: $orderId",
-                        style: const TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 5),
-                    Text("Customer: $customerId", style: const TextStyle(fontSize: 12)),
-                  ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "ID: $orderId",
+                        style: GoogleFonts.outfit(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: themeController.primaryText,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "Customer: ${order['customerName'] ?? order['customerId'] ?? 'Unknown'}",
+                        style: GoogleFonts.outfit(
+                          fontSize: 12,
+                          color: themeController.secondaryText,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (order['customerPhone'] != null)
+                        Text(
+                          "Phone: ${order['customerPhone']}",
+                          style: GoogleFonts.outfit(
+                            fontSize: 12,
+                            color: themeController.secondaryText,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                    ],
+                  ),
                 ),
-                Card(
-                  color: Colors.white54,
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: Row(
-                      children: [
-                        Icon(statusIcon, color: statusColor, size: 12),
-                        const SizedBox(width: 5),
-                        Text(statusLabel,
-                            style: TextStyle(
-                                color: statusColor,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold)),
-                      ],
-                    ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: statusColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: statusColor.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(statusIcon, color: statusColor, size: 14),
+                      const SizedBox(width: 6),
+                      Text(
+                        statusLabel,
+                        style: GoogleFonts.outfit(
+                          color: statusColor,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
-            // Items
-            Text("Items:", style: const TextStyle(fontSize: 14)),
-const SizedBox(height: 5),
 
-items.isNotEmpty
-    ? Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: List.generate(items.length, (index) {
-          final item = items[index] as Map<String, dynamic>;
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 2),
-            child: Text(
-              "${item['title']} x${item['quantity']}  -  ₹${item['price']}",
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.black87,
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Divider(color: themeController.dividerColor),
+            ),
+
+            Text(
+              "Items:",
+              style: GoogleFonts.outfit(
+                color: themeController.secondaryText,
+                fontSize: 13,
               ),
             ),
-          );
-        }),
-      )
-    : const Text("No items"),
+            const SizedBox(height: 8),
 
-const SizedBox(height: 10),
-
-            // Total
-            Text("Total Amount: ₹$total",
-                style: const TextStyle(
-                    fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Color(0xFF00D1B2), 
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: Column(
-            children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text("Orders",
-                          style: TextStyle(
-                              fontSize: 24, fontWeight: FontWeight.bold)),
-                      Text("Manage your orders here",
-                          style: TextStyle(fontSize: 14)),
-                    ],
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.filter_list),
-                    onPressed: () {},
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              // Filters
-              SingleChildScrollView(
-              
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                child: Row(
-                  children: [
-                    for (var filter in ["All", "Accepted", "Completed", "Rejected"])
-                      Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              selectedFilter = filter;
-                            });
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: selectedFilter == filter
-                                ? Colors.deepPurpleAccent
-                                : Colors.grey[300],
-                            foregroundColor: selectedFilter == filter
-                                ? Colors.white
-                                : Colors.black,
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20)),
-                          ),
-                          child: Text(filter,
-                              style: const TextStyle(
-                                  fontSize: 12, fontWeight: FontWeight.bold)),
+            items.isNotEmpty
+                ? Column(
+                    children: List.generate(items.length, (index) {
+                      final item = items[index] as Map<String, dynamic>;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                "${item['title']} x${item['quantity']}",
+                                style: GoogleFonts.outfit(
+                                  fontSize: 14,
+                                  color: themeController.primaryText,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              "₹${item['price']}",
+                              style: GoogleFonts.outfit(
+                                fontSize: 14,
+                                color: themeController.secondaryText,
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                  ],
+                      );
+                    }),
+                  )
+                : Text(
+                    "No items",
+                    style: GoogleFonts.outfit(
+                      color: themeController.secondaryText,
+                    ),
+                  ),
+
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text(
+                  "Total:",
+                  style: GoogleFonts.outfit(
+                    color: themeController.secondaryText,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              // Orders List
-              Expanded(
-                child: vendorId == null
-                    ? const Center(child: Text("Vendor not logged in"))
-                    : StreamBuilder<QuerySnapshot>(
-                        stream: _getOrders(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const Center(child: CircularProgressIndicator());
-                          }
-                          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                            return const Center(child: Text("No orders found"));
-                          }
-                          final orders = snapshot.data!.docs;
-                          return ListView.builder(
-                            itemCount: orders.length,
-                            itemBuilder: (context, index) {
-                              final order =
-                                  orders[index].data() as Map<String, dynamic>;
-                              return _buildOrderCard(order);
-                            },
-                          );
-                        },
-                      ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      // Bottom Navigation
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(30),
-          child: BottomNavigationBar(
-            backgroundColor: Colors.white,
-            selectedItemColor: Colors.deepPurpleAccent,
-            unselectedItemColor: Colors.grey,
-            type: BottomNavigationBarType.fixed,
-            items: const [
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.dashboard), label: "Dashboard"),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.receipt_long), label: "Orders"),
-              BottomNavigationBarItem(icon: Icon(Icons.book), label: "Menu"),
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.settings), label: "Settings"),
-            ],
-            currentIndex: 1,
-            onTap: (index) {
-              if (index == 0) {
-                Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (_) => const Desh()),
-                    (route) => false);
-              } else if (index == 2) {
-                Navigator.push(
-                    context, MaterialPageRoute(builder: (_) => const Menu()));
-              } else if (index == 3) {
-                Navigator.push(
-                    context, MaterialPageRoute(builder: (_) => const Setting()));
-              }
-            },
-          ),
+                const SizedBox(width: 8),
+                Text(
+                  "₹$total",
+                  style: GoogleFonts.outfit(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -295,4 +443,108 @@ extension StringCasingExtension on String {
     if (isEmpty) return "";
     return '${this[0].toUpperCase()}${substring(1)}';
   }
-}  
+}
+
+// --- SHARED UI WIDGETS ---
+
+class _GlassContainer extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry? padding;
+  final double borderRadius;
+  final Color? color;
+  final Color? borderColor;
+
+  const _GlassContainer({
+    required this.child,
+    this.padding,
+    this.borderRadius = 20,
+    this.color,
+    this.borderColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(borderRadius),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+        child: Container(
+          padding: padding,
+          decoration: BoxDecoration(
+            color: color ?? Colors.white.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(borderRadius),
+            border: Border.all(
+              color: borderColor ?? Colors.white.withValues(alpha: 0.1),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 10,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+class _AnimatedGradientBackground extends StatefulWidget {
+  final List<Color>? colors;
+  const _AnimatedGradientBackground({this.colors});
+  @override
+  State<_AnimatedGradientBackground> createState() =>
+      _AnimatedGradientBackgroundState();
+}
+
+class _AnimatedGradientBackgroundState
+    extends State<_AnimatedGradientBackground>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<Alignment> _topAlignmentAnimation;
+  late Animation<Alignment> _bottomAlignmentAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 10),
+    )..repeat(reverse: true);
+    _topAlignmentAnimation = Tween<Alignment>(
+      begin: Alignment.topLeft,
+      end: Alignment.topRight,
+    ).animate(_controller);
+    _bottomAlignmentAnimation = Tween<Alignment>(
+      begin: Alignment.bottomRight,
+      end: Alignment.bottomLeft,
+    ).animate(_controller);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) => AnimatedContainer(
+        duration: const Duration(milliseconds: 500),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: _topAlignmentAnimation.value,
+            end: _bottomAlignmentAnimation.value,
+            colors:
+                widget.colors ??
+                const [Color(0xFF141414), Color(0xFF1E1E1E), Color(0xFF141414)],
+          ),
+        ),
+      ),
+    );
+  }
+}

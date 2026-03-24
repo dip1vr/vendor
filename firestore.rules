@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is owner
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // Restaurant Collection Rules
+    match /restaurants/{userId} {
+      allow read, write: if isOwner(userId);
+      
+      // OFFERS Sub-collection Rules
+      match /offers/{offerId} {
+        // Only the restaurant owner can Read, Write, Update, Delete
+        allow read, write: if isOwner(userId);
+
+        // Optional: Strong Schema Validation (Uncomment to enforce strict types)
+        // allow create, update: if isOwner(userId)
+        //   && request.resource.data.title is string
+        //   && request.resource.data.code is string
+        //   && request.resource.data.discountValue is number
+        //   && (request.resource.data.discountType == 'percentage' || request.resource.data.discountType == 'flat')
+        //   && request.resource.data.minOrderValue is number
+        //   && request.resource.data.isActive is bool;
+      }
+      
+      // Menu Items Sub-collection Rules
+      match /menuItems/{itemId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Orders Sub-collection Rules
+      match /orders/{orderId} {
+        allow read, write: if isOwner(userId);
+      }
+    }
+  }
+}

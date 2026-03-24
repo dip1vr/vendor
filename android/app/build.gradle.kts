@@ -1,45 +1,45 @@
 plugins {
-    id 'com.android.application'
-    id 'kotlin-android'
-    id 'com.google.gms.google-services' // Firebase Google Services plugin
+    id("com.android.application")
+    id("kotlin-android")
+    id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")
 }
 
 android {
     namespace = "com.example.vendor"
-    compileSdk = 34
-
-    defaultConfig {
-        applicationId = "com.example.vendor"
-        minSdk = 21
-        targetSdk = 34
-        versionCode 1
-        versionName "1.0"
-    }
+    compileSdk = flutter.compileSdkVersion
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 
     kotlinOptions {
-        jvmTarget = "1.8" // Recommended for Firebase and Kotlin interoperability
+        jvmTarget = JavaVersion.VERSION_11.toString()
+    }
+
+    defaultConfig {
+        applicationId = "com.example.vendor"
+        minSdk = flutter.minSdkVersion
+        targetSdk = flutter.targetSdkVersion
+        versionCode = flutter.versionCode
+        versionName = flutter.versionName
     }
 
     buildTypes {
         release {
-            signingConfig signingConfigs.debug
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 }
 
-dependencies {
-    implementation platform('com.google.firebase:firebase-bom:32.2.2')
-    implementation 'com.google.firebase:firebase-auth'
-    implementation 'com.google.firebase:firebase-firestore'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.20"  // Ensure Kotlin stdlib
+flutter {
+    source = "../.."
 }
 
-// Apply the Google services plugin after other plugins
-apply plugin: 'com.google.gms.google-services'
+dependencies {
+    implementation(platform("com.google.firebase:firebase-bom:32.2.2"))
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
+}

@@ -6,8 +6,6 @@ import io.flutter.plugins.GeneratedPluginRegistrant
 
 class MainActivity : FlutterFragmentActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
-        <uses-permission android:name="android.permission.INTERNET"/>
-
         GeneratedPluginRegistrant.registerWith(flutterEngine)
     }
 }

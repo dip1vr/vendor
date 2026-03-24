@@ -4,7 +4,8 @@ class MenuItem {
   final String category;
   final String description;
   final double price;
-  bool isActive; // 👈 Add this field
+  final String? imageUrl; // 👈 Add this field
+  bool isActive;
 
   MenuItem({
     required this.id,
@@ -12,6 +13,7 @@ class MenuItem {
     required this.category,
     required this.description,
     required this.price,
-    this.isActive = true, // default ON
+    this.imageUrl, // 👈 Add this
+    this.isActive = true,
   });
 }
